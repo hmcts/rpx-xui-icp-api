@@ -11,11 +11,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 18.19.0
       - run: yarn --version
       - run: yarn install --check-cache
       - run: yarn cichecks
+      - name: Start application for smoke test
+        run: NODE_ENV=local-dev yarn ts-node -r tsconfig-paths/register server.ts > /tmp/icp-api.log 2>&1 &
+      - run: yarn test:smoke
