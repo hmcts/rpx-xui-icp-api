@@ -25,5 +25,15 @@ jobs:
       - run: yarn install --check-cache
       - run: yarn cichecks
       - name: Start application for smoke test
-        run: NODE_ENV=local-dev yarn ts-node -r tsconfig-paths/register server.ts > /tmp/icp-api.log 2>&1 &
-      - run: yarn test:smoke
+        run: |
+          nohup env NODE_ENV=local-dev yarn ts-node -r tsconfig-paths/register server.ts > /tmp/icp-api.log 2>&1 &
+          echo $! > /tmp/icp-api.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8080/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/icp-api.log
+          exit 1
+      - run: TEST_URL=http://127.0.0.1:8080 yarn test:smoke
