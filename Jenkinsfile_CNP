@@ -16,8 +16,9 @@ properties([
 import uk.gov.hmcts.contino.AppPipelineConfig
 
 def type = "nodejs"
-def product = "em"
-def component = "icp"
+def product = "xui"
+def component = "icp-api"
+def channel = '#xui-pipeline'
 
 static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
   [$class     : 'AzureKeyVaultSecret',
@@ -53,6 +54,7 @@ def branchesToSync = ['demo','ithc','perftest']
 
 withPipeline(type, product, component) {
   loadVaultSecrets(secrets)
+  enableSlackNotifications(channel)
   disableLegacyDeployment()
 //  after('build') {
 //    yarnBuilder.yarn('build')
