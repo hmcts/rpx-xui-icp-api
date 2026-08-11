@@ -1,14 +1,20 @@
 #!groovy
 
 properties([
+[
+  $class       : 'GithubProjectProperty',
+  displayName  : 'XUI ICP API',
+  projectUrlStr: 'https://github.com/hmcts/rpx-xui-icp-api'
+],
 // H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
 pipelineTriggers([cron('H 8 * * 1-5')])])
 
 @Library("Infrastructure@2.4.4")
 
 def type = "nodejs"
-def product = "em"
-def component = "icp"
+def product = "xui"
+def component = "icp-api"
+def channel = '#xui-pipeline'
 
 env.TEST_URL= "http://em-icp-aat.service.core-compute-aat.internal"
 env.IDAM_API_BASE_URL= "https://idam-api.aat.platform.hmcts.net"
@@ -37,6 +43,7 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 
 withNightlyPipeline(type, product, component) {
   loadVaultSecrets(secrets)
+  enableSlackNotifications(channel)
 //  enableCrossBrowserTest()
 //  enableSecurityScan()
   enableFullFunctionalTest(200)
