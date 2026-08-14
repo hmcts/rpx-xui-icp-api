@@ -6,7 +6,7 @@ home: https://github.com/hmcts/rpx-xui-icp-api
 version: 0.2.34
 dependencies:
   - name: nodejs
-    version: 3.2.0
+    version: 3.2.1
     repository: 'oci://hmctsprod.azurecr.io/helm'
   - name: redis
     version: 20.11.3
