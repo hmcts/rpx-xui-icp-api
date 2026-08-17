@@ -1,50 +1,54 @@
 #!groovy
 
-properties([
-[
-  $class       : 'GithubProjectProperty',
-  displayName  : 'XUI ICP API',
-  projectUrlStr: 'https://github.com/hmcts/rpx-xui-icp-api'
-],
-// H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
-pipelineTriggers([cron('H 8 * * 1-5')])])
+@Library("Infrastructure@2.4.4") _
 
-@Library("Infrastructure@2.4.4")
+import uk.gov.hmcts.pipeline.TeamConfig
 
-def type = "nodejs"
-def product = "xui"
-def component = "icp-api"
-def channel = '#xui-pipeline'
+def product = 'xui'
+def component = 'icp-api'
 
-env.TEST_URL= "http://em-icp-aat.service.core-compute-aat.internal"
-env.IDAM_API_BASE_URL= "https://idam-api.aat.platform.hmcts.net"
-env.IDAM_S2S_URL= "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal"
-env.IDAM_WEBSHOW_WHITELIST = 'https://em-show-aat.service.core-compute-aat.internal/oauth2/callback'
-env.REDIS_HOST= "em-icp-redis-cache-aat.redis.cache.windows.net"
-env.REDIS_PORT= 6380
-
-def secrets = [
-  's2s-${env}': [
-    secret('microservicekey-em-gw', 'FUNCTIONAL_TEST_CLIENT_S2S_TOKEN')
-  ],
-  'rpa-${env}': [
-    secret('show-oauth2-token', 'FUNCTIONAL_TEST_CLIENT_OAUTH_SECRET')
-  ]
-]
-
-static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
-  [ $class: 'AzureKeyVaultSecret',
-    secretType: 'Secret',
-    name: secretName,
-    version: '',
-    envVariable: envVar
-  ]
+// Stage A proves the scheduled destination build without publishing or deploying it.
+if (env.BRANCH_NAME != 'master') {
+  error('EXUI-5084 Stage A: the build-only nightly pipeline may run only from master.')
 }
 
-withNightlyPipeline(type, product, component) {
-  loadVaultSecrets(secrets)
-  enableSlackNotifications(channel)
-//  enableCrossBrowserTest()
-//  enableSecurityScan()
-  enableFullFunctionalTest(200)
+properties([
+  [
+    $class       : 'GithubProjectProperty',
+    displayName  : 'Presenting Evidence Digitally Backend API',
+    projectUrlStr: 'https://github.com/hmcts/rpx-xui-icp-api'
+  ],
+  pipelineTriggers([cron('H 8 * * 1-5')])
+])
+
+new TeamConfig(this).setTeamConfigEnv(product)
+
+def agentType = env.BUILD_AGENT_TYPE
+def nodeSelector = agentType == '' ? 'daily' : agentType in ['civil', 'xui'] ? agentType : "${agentType} && daily"
+
+node(nodeSelector) {
+  timeout(time: 30, unit: 'MINUTES') {
+    try {
+      dockerAgentSetup()
+      env.PATH = "$env.PATH:/usr/local/bin"
+
+      stage('Checkout') {
+        checkout scm
+      }
+
+      stage("Build and test ${product}/${component}") {
+        sh '''
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin"
+          export PATH="$HOME/.local/bin:$PATH"
+          yarn --version
+          yarn install --check-cache
+          yarn lint
+          yarn test
+        '''
+      }
+    } finally {
+      deleteDir()
+    }
+  }
 }
