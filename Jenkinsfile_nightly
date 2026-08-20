@@ -9,7 +9,7 @@ properties([
 // H allow predefined but random minute see https://en.wikipedia.org/wiki/Cron#Non-standard_characters
 pipelineTriggers([cron('H 8 * * 1-5')])])
 
-@Library("Infrastructure@2.4.4")
+@Library("Infrastructure@2.5.1")
 
 def type = "nodejs"
 def product = "xui"
