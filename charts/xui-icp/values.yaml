@@ -23,8 +23,10 @@ nodejs:
     ICP_ALLOWED_ORIGIN: https://manage-case.{{ .Values.global.environment }}.platform.hmcts.net
   spotInstances:
     enabled: true
+  # Use the existing XUI shared vault. The key is the vault base name;
+  # xui-icp would resolve to the nonexistent xui-icp-<environment> vault.
   keyVaults:
-    xui-icp:
+    rpx:
       resourceGroup: rpx
       secrets:
         - xui-icp-redis-password
