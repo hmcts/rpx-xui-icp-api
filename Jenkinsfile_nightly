@@ -1,54 +1,36 @@
 #!groovy
 
-@Library("Infrastructure@2.5.1") _
-
-import uk.gov.hmcts.pipeline.TeamConfig
-
-def product = 'xui'
-def component = 'icp-api'
-
-// Stage A proves the scheduled destination build without publishing or deploying it.
-if (env.BRANCH_NAME != 'master') {
-  error('EXUI-5084 Stage A: the build-only nightly pipeline may run only from master.')
-}
-
 properties([
-  [
-    $class       : 'GithubProjectProperty',
-    displayName  : 'XUI ICP API',
-    projectUrlStr: 'https://github.com/hmcts/rpx-xui-icp-api'
-  ],
   pipelineTriggers([cron('H 8 * * 1-5')])
 ])
 
-new TeamConfig(this).setTeamConfigEnv(product)
+@Library("Infrastructure@2.5.1")
 
-def agentType = env.BUILD_AGENT_TYPE
-def nodeSelector = agentType == '' ? 'daily' : agentType in ['civil', 'xui'] ? agentType : "${agentType} && daily"
+def type = "nodejs"
+def product = "xui"
+def component = "icp"
+def channel = '#xui-pipeline'
 
-node(nodeSelector) {
-  timeout(time: 30, unit: 'MINUTES') {
-    try {
-      dockerAgentSetup()
-      env.PATH = "$env.PATH:/usr/local/bin"
+env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"
+env.IDAM_API_BASE_URL = "https://idam-api.aat.platform.hmcts.net"
+env.IDAM_S2S_URL = "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal"
+env.IDAM_WEBSHOW_WHITELIST = 'https://em-show-aat.service.core-compute-aat.internal/oauth2/callback'
+env.REDIS_HOST = "xui-icp-redis-cache-aat.redis.cache.windows.net"
+env.REDIS_PORT = 6380
 
-      stage('Checkout') {
-        checkout scm
-      }
+def secrets = [
+  'rpx-${env}': [
+    secret('microservicekey-em-gw', 'FUNCTIONAL_TEST_CLIENT_S2S_TOKEN'),
+    secret('show-oauth2-token', 'FUNCTIONAL_TEST_CLIENT_OAUTH_SECRET')
+  ]
+]
 
-      stage("Build and test ${product}/${component}") {
-        sh '''
-          mkdir -p "$HOME/.local/bin"
-          corepack enable --install-directory "$HOME/.local/bin"
-          export PATH="$HOME/.local/bin:$PATH"
-          yarn --version
-          yarn install
-          yarn lint
-          yarn test
-        '''
-      }
-    } finally {
-      deleteDir()
-    }
-  }
+static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
+  [$class: 'AzureKeyVaultSecret', secretType: 'Secret', name: secretName, version: '', envVariable: envVar]
+}
+
+withNightlyPipeline(type, product, component) {
+  enableSlackNotifications(channel)
+  loadVaultSecrets(secrets)
+  enableFullFunctionalTest(200)
 }
