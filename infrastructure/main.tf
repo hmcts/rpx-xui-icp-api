@@ -253,9 +253,11 @@ variable "user_ids" {
 }
 
 resource "azurerm_role_assignment" "web_pubsub_service_owner" {
-  for_each = local.local_env != "prod" ? toset(var.user_ids) : []
+  # Keep the legacy count address so the existing assignment is not planned
+  # for deletion when this state is reconciled.
+  count = local.local_env != "prod" ? length(var.user_ids) : 0
 
   scope                = azurerm_web_pubsub.ped_web_pubsub.id
   role_definition_name = "Web PubSub Service Owner"
-  principal_id         = each.value
+  principal_id         = var.user_ids[count.index]
 }
