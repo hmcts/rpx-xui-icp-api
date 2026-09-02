@@ -9,10 +9,10 @@ const config = require("config");
 
 export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions {
 
-  private client: WebPubSubServiceClient;
-  private appInsightClient: TelemetryClient;
-  private redisClient: RedisClient;
-  private allowedOrigin?: string;
+  private readonly client: WebPubSubServiceClient;
+  private readonly appInsightClient: TelemetryClient;
+  private readonly redisClient: RedisClient;
+  private readonly allowedOrigin?: string;
 
   constructor(webPubSubServiceClient: WebPubSubServiceClient, appInsightClient: TelemetryClient, redisClient: RedisClient, allowedOrigin?: string) {
     this.client = webPubSubServiceClient;

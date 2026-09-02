@@ -4,7 +4,7 @@ gitRevision: GIT_REVISION
 frontendPublicHttpProtocol: PUBLIC_PROTOCOL
 
 service:
-  name: icp-api
+  name: xui-icp
 
 app:
   useCSRFProtection: "true"

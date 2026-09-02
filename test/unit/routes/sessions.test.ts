@@ -7,7 +7,6 @@
 // import { WebPubSubServiceClient } from "@azure/web-pubsub";
 // import { EmWebPubEventHandlerOptions } from "em-web-pub-event-handler-options";
 
-
 // chai.use(chaiHttp);
 
 // describe("/GET sessions", () => {
@@ -30,7 +29,7 @@
 //   //     .returns(Promise.resolve({ name: "Test User" }));
 //   //   sinon.createStubInstance(WebPubSubServiceClient);
 //   //   sandbox.stub(WebPubSubServiceClient.prototype, "getClientAccessToken").returns(Promise.resolve({}));
-
+//   //
 //   //   setTimeout(() => {
 //   //     chai.request(app)
 //   //       .get("/icp/sessions/1234")
@@ -50,7 +49,7 @@
 //   //   sandbox.stub(IdamClient.prototype, "verifyToken").returns(Promise.resolve());
 //   //   sandbox.stub(IdamClient.prototype, "getUserInfo")
 //   //     .returns(Promise.resolve({ name: "Test User" }));
-
+//   //
 //   //   setTimeout(() => {
 //   //     chai.request(app)
 //   //       .get("/icp/sessions/5678")
@@ -87,7 +86,6 @@
 //         .set("Authorization", "Token")
 //         .end((err, res) => {
 //           chai.expect(res.status).to.equal(400);
-
 //           done();
 //         });
 //     });
@@ -104,7 +102,6 @@
 //         .set("Authorization", "Token")
 //         .end((err, res) => {
 //           chai.expect(res.status).to.equal(400);
-
 //           done();
 //         });
 //     });

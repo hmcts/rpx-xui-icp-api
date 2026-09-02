@@ -1,4 +1,4 @@
-FROM hmctsprod.azurecr.io/base/node:24-alpine as base
+FROM hmctsprod.azurecr.io/base/node:24-alpine AS base
 
 USER hmcts
 
@@ -9,11 +9,11 @@ RUN yarn workspaces focus --all --production && rm -rf "$(yarn cache clean)"
 
 
 # ---- Build image ----
-FROM base as build
+FROM base AS build
 RUN yarn workspaces focus --all --production && rm -rf "$(yarn cache clean)"
 
 # ---- Runtime image ----
-FROM base as runtime
+FROM base AS runtime
 COPY --from=build $WORKDIR/api ./api
 COPY --from=build $WORKDIR/app.ts $WORKDIR/server.ts ./
 

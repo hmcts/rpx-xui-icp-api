@@ -10,7 +10,7 @@ export class RedisClient {
     try {
       const session = await client.hgetall(sessionId);
       if (!session) {
-        throw Error("session not found");
+        throw new Error("session not found");
       }
       return session;
     } catch (err) {

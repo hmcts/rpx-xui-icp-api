@@ -1,5 +1,5 @@
 variable "product" {
-  default = "em"
+  default = "xui"
 }
 
 variable "component" {

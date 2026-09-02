@@ -30,8 +30,8 @@ locals {
   thumbprints_in_quotes     = formatlist("&quot;%s&quot;", local.allowed_certificate_thumbprints)
   thumbprints_in_quotes_str = join(",", local.thumbprints_in_quotes)
   api_policy                = replace(file("template/api-policy.xml"), "ALLOWED_CERTIFICATE_THUMBPRINTS", local.thumbprints_in_quotes_str)
-  api_base_path             = "${var.product}-icp-api"
-  icp_event_handler_url     = var.env == "prod" ? "https://em-icp.platform.hmcts.net/eventhandler" : "https://em-icp.${var.env}.platform.hmcts.net/eventhandler"
+  api_base_path             = "${var.product}-${var.component}"
+  icp_event_handler_url     = var.env == "prod" ? "https://xui-icp.platform.hmcts.net/eventhandler" : "https://xui-icp.${var.env}.platform.hmcts.net/eventhandler"
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -41,28 +41,14 @@ resource "azurerm_resource_group" "rg" {
   tags = var.common_tags
 }
 
-data "azurerm_user_assigned_identity" "em-shared-identity" {
+data "azurerm_user_assigned_identity" "shared_identity" {
   name                = "rpa-${var.env}-mi"
   resource_group_name = "managed-identities-${var.env}-rg"
 }
 
-data "azurerm_user_assigned_identity" "jenkins" {
-  name                = "jenkins-${var.env}-mi"
-  resource_group_name = "managed-identities-${var.env}-rg"
-}
-
-module "local_key_vault" {
-  source                       = "git@github.com:hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
-  product                      = local.app_full_name
-  env                          = var.env
-  tenant_id                    = var.tenant_id
-  object_id                    = var.jenkins_AAD_objectId
-  resource_group_name          = azurerm_resource_group.rg.name
-  product_group_object_id      = "5d9cd025-a293-4b97-a0e5-6f43efce02c0"
-  common_tags                  = var.common_tags
-  managed_identity_object_ids  = ["${data.azurerm_user_assigned_identity.em-shared-identity.principal_id}", "${var.managed_identity_object_id}"]
-  jenkins_object_id            = data.azurerm_user_assigned_identity.jenkins.principal_id
-  grant_preview_jenkins_access = var.env == "aat"
+data "azurerm_key_vault" "shared_vault" {
+  name                = "rpx-${local.local_env}"
+  resource_group_name = "rpx-${local.local_env}"
 }
 
 data "azurerm_key_vault" "s2s_vault" {
@@ -76,21 +62,37 @@ data "azurerm_key_vault_secret" "s2s_key" {
 }
 
 resource "azurerm_key_vault_secret" "local_s2s_key" {
-  name         = "microservicekey-em-icp"
+  name         = "microservicekey-xui-icp"
   value        = data.azurerm_key_vault_secret.s2s_key.value
-  key_vault_id = module.local_key_vault.key_vault_id
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
-data "azurerm_application_insights" "em_application_insight" {
-  name                = "em-${local.local_env}"
-  resource_group_name = "rpa-${local.local_env}"
+resource "azurerm_key_vault_secret" "compat_s2s_key" {
+  name         = "microservicekey-em-icp"
+  value        = data.azurerm_key_vault_secret.s2s_key.value
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+module "application_insights" {
+  source = "git@github.com:hmcts/terraform-module-application-insights?ref=4.x"
+
+  env                 = var.env
+  product             = var.product
+  name                = "${local.app_full_name}-appinsights"
+  resource_group_name = azurerm_resource_group.rg.name
+  common_tags         = var.common_tags
 }
 
 resource "azurerm_key_vault_secret" "local_app_insights_key" {
+  name         = "xui-icp-appinsights-instrumentation-key"
+  value        = module.application_insights.connection_string
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+resource "azurerm_key_vault_secret" "compat_app_insights_key" {
   name         = "AppInsightsInstrumentationKey"
-  value        = data.azurerm_application_insights.em_application_insight.connection_string
-  key_vault_id = module.local_key_vault.key_vault_id
-  depends_on   = [data.azurerm_application_insights.em_application_insight]
+  value        = module.application_insights.connection_string
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 
@@ -109,7 +111,7 @@ data "azurerm_subnet" "cft_infra_web_pub_sub_subnet" {
   provider             = azurerm.webpubsub_vnet_provider
 }
 
-module "em-icp-redis-cache" {
+module "xui_icp_redis_cache" {
   source                        = "git@github.com:hmcts/cnp-module-redis?ref=master"
   product                       = "${var.product}-${var.component}-redis-cache"
   location                      = var.location
@@ -128,9 +130,16 @@ module "em-icp-redis-cache" {
 
 resource "azurerm_key_vault_secret" "local_redis_password" {
   count        = 1
+  name         = "xui-icp-redis-password"
+  value        = module.xui_icp_redis_cache[0].access_key
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+resource "azurerm_key_vault_secret" "compat_redis_password" {
+  count        = 1
   name         = "redis-password"
-  value        = module.em-icp-redis-cache[0].access_key
-  key_vault_id = module.local_key_vault.key_vault_id
+  value        = module.xui_icp_redis_cache[0].access_key
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 resource "azurerm_web_pubsub" "ped_web_pubsub" {
@@ -149,7 +158,7 @@ resource "azurerm_web_pubsub" "ped_web_pubsub" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.em-shared-identity.id]
+    identity_ids = [data.azurerm_user_assigned_identity.shared_identity.id]
   }
 }
 
@@ -197,10 +206,16 @@ resource "azurerm_web_pubsub_hub" "icpHub" {
   ]
 }
 
-resource "azurerm_key_vault_secret" "em_icp_web_pubsub_primary_connection_string" {
+resource "azurerm_key_vault_secret" "xui_icp_api_web_pubsub_primary_connection_string" {
+  name         = "xui-icp-web-pubsub-primary-connection-string"
+  value        = azurerm_web_pubsub.ped_web_pubsub.primary_connection_string
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+resource "azurerm_key_vault_secret" "compat_web_pubsub_primary_connection_string" {
   name         = "em-icp-web-pubsub-primary-connection-string"
   value        = azurerm_web_pubsub.ped_web_pubsub.primary_connection_string
-  key_vault_id = module.local_key_vault.key_vault_id
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 variable "user_ids" {

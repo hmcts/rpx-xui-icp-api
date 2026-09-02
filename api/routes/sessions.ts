@@ -11,7 +11,7 @@ const config = require("config");
 const router = express.Router();
 const idam = new IdamClient();
 const logger = Logger.getLogger("sessions");
-const primaryConnectionstring = config.secrets ? config.secrets["em-icp"]["em-icp-web-pubsub-primary-connection-string"] : undefined;
+const primaryConnectionstring = config.secrets ? config.secrets["rpx"]["xui-icp-web-pubsub-primary-connection-string"] : undefined;
 
 router.get("/icp/sessions/:caseId/:documentId", async (req, res) => {
   const token = req.header("Authorization");
@@ -38,9 +38,6 @@ router.get("/icp/sessions/:caseId/:documentId", async (req, res) => {
     return res.status(400).send();
   }
 
-  logger.info({
-    message: `primary connectionstring: ${primaryConnectionstring}`,
-  });
   const service = new WebPubSubServiceClient(primaryConnectionstring, "Hub");
   const accessToken = await service.getClientAccessToken({ userId: username, roles: [`webpubsub.joinLeaveGroup.${caseId}--${documentId}`, `webpubsub.sendToGroup.${caseId}--${documentId}`] });
   const today = new Date().toDateString();
@@ -52,7 +49,7 @@ router.get("/icp/sessions/:caseId/:documentId", async (req, res) => {
     }
 
     const connectionUrl = config.icp.wsUrl;
-    if (!session || session.dateOfHearing !== today) {
+    if (session?.dateOfHearing !== today) {
       
       const newSession: Session = {
         sessionId: uuidv4(),

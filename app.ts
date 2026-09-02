@@ -1,7 +1,7 @@
 import * as bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import express from "express";
-import * as path from "path";
+import * as path from "node:path";
 import { RouterFinder } from "./api/router/routerFinder";
 import { HttpError } from "./api/model/httpError";
 import csrf from "@dr.pogodin/csurf";
@@ -26,8 +26,8 @@ const env = process.env.NODE_ENV || "development";
 
 propertiesVolume.addTo(config);
 
-const APP_INSIGHTS_KEY = config.secrets ? config.secrets["em-icp"]["AppInsightsInstrumentationKey"] : undefined;
-const primaryConnectionstring = config.secrets ? config.secrets["em-icp"]["em-icp-web-pubsub-primary-connection-string"] : undefined;
+const APP_INSIGHTS_KEY = config.secrets ? config.secrets["rpx"]["xui-icp-appinsights-instrumentation-key"] : undefined;
+const primaryConnectionstring = config.secrets ? config.secrets["rpx"]["xui-icp-web-pubsub-primary-connection-string"] : undefined;
 
 const logger = Logger.getLogger("app");
 
@@ -45,7 +45,7 @@ if (APP_INSIGHTS_KEY) {
     .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
     .setSendLiveMetrics(true)
     .start();
-  appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = "em-icp";
+  appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = "xui-icp";
 }
 
 let appInsightClient;

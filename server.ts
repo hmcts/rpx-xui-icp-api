@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-import { Server } from "http";
+import { Server } from "node:http";
 import { Logger } from "@hmcts/nodejs-logging";
-import * as fs from "fs";
-import * as https from "https";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as https from "node:https";
+import * as path from "node:path";
 import { app } from "./app";
 
 const logger = Logger.getLogger("server");
-const port: number = parseInt(process.env.PORT, 10) || 8080;
+const port: number = Number.parseInt(process.env.PORT, 10) || 8080;
 let server: Server;
 
 if (app.locals.ENV === "development") {
@@ -27,5 +27,4 @@ if (app.locals.ENV === "development") {
     logger.info(`Application started: http://localhost:${port}`);
   });
 }
-
 

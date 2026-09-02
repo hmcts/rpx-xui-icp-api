@@ -20,7 +20,7 @@ describe("EmWebPubEventHandlerOptions", () => {
       connectionId: "connectionId",
       eventName: "connect",
       hub: "hub",
-      origin: "https://em-icp-webpubsub.demo.webpubsub.azure.com",
+      origin: "https://xui-icp-webpubsub.demo.webpubsub.azure.com",
       signature: "signature",
       states: {},
       clientProtocol: "default",

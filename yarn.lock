@@ -632,6 +632,57 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hmcts/icp-api@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/icp-api@workspace:."
+  dependencies:
+    "@azure/web-pubsub": "npm:^1.2.0"
+    "@azure/web-pubsub-express": "npm:^1.0.6"
+    "@babel/core": "npm:^7.20.5"
+    "@babel/eslint-parser": "npm:^7.19.1"
+    "@dr.pogodin/csurf": "npm:^1.17.1"
+    "@hmcts/nodejs-healthcheck": "npm:^1.8.6"
+    "@hmcts/nodejs-logging": "npm:^4.0.0"
+    "@hmcts/properties-volume": "npm:^1.4.1"
+    "@types/chai": "npm:^4.3.11"
+    "@types/config": "npm:^3.0.0"
+    "@types/cookie-parser": "npm:^1.4.3"
+    "@types/express": "npm:^4.17.17"
+    "@types/helmet": "npm:^4.0.0"
+    "@types/mocha": "npm:^10.0.1"
+    "@types/node": "npm:^22.6.1"
+    "@types/require-directory": "npm:^2.1.1"
+    "@types/sinon": "npm:^17.0.0"
+    "@types/uuid": "npm:^10.0.0"
+    "@typescript-eslint/eslint-plugin": "npm:^7.12.0"
+    "@typescript-eslint/parser": "npm:^8.6.0"
+    applicationinsights: "npm:^3.15.1"
+    axios: "npm:^1.18.1"
+    chai: "npm:^4.3.10"
+    config: "npm:^3.3.9"
+    cookie-parser: "npm:^1.4.4"
+    cross-env: "npm:^7.0.3"
+    eslint: "npm:8.57.1"
+    express: "npm:^5.2.1"
+    express-rate-limit: "npm:^7.3.0"
+    helmet: "npm:^8.1.0"
+    ioredis: "npm:^5.4.1"
+    ioredis-mock: "npm:^8.9.0"
+    mocha: "npm:^10.7.0"
+    nocache: "npm:^4.0.0"
+    nodemon: "npm:^3.1.1"
+    nyc: "npm:^17.0.0"
+    require-directory: "npm:^2.1.1"
+    sinon: "npm:^19.0.2"
+    sonar-scanner: "npm:^3.1.0"
+    swagger-ui-express: "npm:^5.0.1"
+    ts-node: "npm:^10.9.2"
+    tsconfig-paths: "npm:^4.2.0"
+    typescript: "npm:^6.0.3"
+    uuid: "npm:^10.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/nodejs-healthcheck@npm:^1.8.6":
   version: 1.8.6
   resolution: "@hmcts/nodejs-healthcheck@npm:1.8.6"
@@ -3061,57 +3112,6 @@ __metadata:
   checksum: 10c0/6e85abde0e3c77945c3cdd6f28741cba268474a62bfbe8c59c5728438a03e689d1df74fd4526a73064f452350ef7fd0b8edb721fa979a791813b81ec2b1a0d8c
   languageName: node
   linkType: hard
-
-"em-icp-api@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "em-icp-api@workspace:."
-  dependencies:
-    "@azure/web-pubsub": "npm:^1.2.0"
-    "@azure/web-pubsub-express": "npm:^1.0.6"
-    "@babel/core": "npm:^7.20.5"
-    "@babel/eslint-parser": "npm:^7.19.1"
-    "@dr.pogodin/csurf": "npm:^1.17.1"
-    "@hmcts/nodejs-healthcheck": "npm:^1.8.6"
-    "@hmcts/nodejs-logging": "npm:^4.0.0"
-    "@hmcts/properties-volume": "npm:^1.4.1"
-    "@types/chai": "npm:^4.3.11"
-    "@types/config": "npm:^3.0.0"
-    "@types/cookie-parser": "npm:^1.4.3"
-    "@types/express": "npm:^4.17.17"
-    "@types/helmet": "npm:^4.0.0"
-    "@types/mocha": "npm:^10.0.1"
-    "@types/node": "npm:^22.6.1"
-    "@types/require-directory": "npm:^2.1.1"
-    "@types/sinon": "npm:^17.0.0"
-    "@types/uuid": "npm:^10.0.0"
-    "@typescript-eslint/eslint-plugin": "npm:^7.12.0"
-    "@typescript-eslint/parser": "npm:^8.6.0"
-    applicationinsights: "npm:^3.15.1"
-    axios: "npm:^1.18.1"
-    chai: "npm:^4.3.10"
-    config: "npm:^3.3.9"
-    cookie-parser: "npm:^1.4.4"
-    cross-env: "npm:^7.0.3"
-    eslint: "npm:8.57.1"
-    express: "npm:^5.2.1"
-    express-rate-limit: "npm:^7.3.0"
-    helmet: "npm:^8.1.0"
-    ioredis: "npm:^5.4.1"
-    ioredis-mock: "npm:^8.9.0"
-    mocha: "npm:^10.7.0"
-    nocache: "npm:^4.0.0"
-    nodemon: "npm:^3.1.1"
-    nyc: "npm:^17.0.0"
-    require-directory: "npm:^2.1.1"
-    sinon: "npm:^19.0.2"
-    sonar-scanner: "npm:^3.1.0"
-    swagger-ui-express: "npm:^5.0.1"
-    ts-node: "npm:^10.9.2"
-    tsconfig-paths: "npm:^4.2.0"
-    typescript: "npm:^6.0.3"
-    uuid: "npm:^10.0.0"
-  languageName: unknown
-  linkType: soft
 
 "emoji-regex@npm:^8.0.0":
   version: 8.0.0

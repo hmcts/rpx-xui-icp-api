@@ -3,7 +3,7 @@ import * as propertiesVolume from "@hmcts/properties-volume";
 import { Session } from "../../api/model/interfaces";
 
 const config = require("config");
-const url = require("url");
+import { URLSearchParams } from "node:url";
 const frontendURL = process.env.TEST_URL || "http://localhost:8080";
 const idamUrl = process.env.IDAM_API_BASE_URL || "http://localhost:5000";
 const username = "***REMOVED***";
@@ -29,7 +29,7 @@ export class TestUtil {
     const headers = {
       "Content-Type": "application/x-www-form-urlencoded",
     };
-    const params = new url.URLSearchParams();
+    const params = new URLSearchParams();
     params.append("scope", "openid roles profile");
     params.append("grant_type", "password");
     params.append("redirect_uri", process.env.IDAM_WEBSHOW_WHITELIST || "http://localhost:8080/oauth2redirect");

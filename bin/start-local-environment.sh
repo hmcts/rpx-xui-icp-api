@@ -30,7 +30,7 @@ docker-compose -f ${COMPOSE_FILE} up -d idam-api
 
 echo "Testing IDAM Authentication..."
 token=$(./bin/idam-authenticate.sh ${IDAM_URI} ${IDAM_USERNAME} ${IDAM_PASSWORD})
-while [ "_${token}" = "_" ]; do
+while [[ "_${token}" = "_" ]]; do
       sleep 60
       echo "idam-api is not running! Check logs, you may need to restart"
       token=$(./bin/idam-authenticate.sh ${IDAM_URI} ${IDAM_USERNAME} ${IDAM_PASSWORD})
