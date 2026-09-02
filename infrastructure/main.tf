@@ -57,7 +57,7 @@ data "azurerm_key_vault" "s2s_vault" {
 }
 
 data "azurerm_key_vault_secret" "s2s_key" {
-  name         = "microservicekey-xui-icp"
+  name         = "microservicekey-em-icp"
   key_vault_id = data.azurerm_key_vault.s2s_vault.id
 }
 

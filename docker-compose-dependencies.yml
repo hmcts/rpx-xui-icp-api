@@ -12,7 +12,7 @@ services:
     container_name: icp-service-auth
     environment:
       - jwtKey=wThK0f0/lh3FlxFcL4xUWDMI5C1J9KyQBgXV4wseh1e5J1uYJIjvTvArHxQDrYoHJ23xFxjHkOnvNbR5dXRoxA==
-      - microserviceKeys_xui_icp=AAAAAAAAAAAAAAAA
+      - microserviceKeys_em_icp=AAAAAAAAAAAAAAAA
       #      logging env vars
       - JSON_CONSOLE_PRETTY_PRINT=false
       - REFORM_SERVICE_TYPE=java

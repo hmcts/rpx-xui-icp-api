@@ -33,7 +33,7 @@ security:
 
 s2s:
   url: "http://localhost:4502"
-  microservice: "xui_icp"
+  microservice: "em_icp"
   secret: "AAAAAAAAAAAAAAAA"
 
 tokenRefreshTime: 3600000 # (60 mins)
