@@ -261,3 +261,13 @@ resource "azurerm_role_assignment" "web_pubsub_service_owner" {
   role_definition_name = "Web PubSub Service Owner"
   principal_id         = each.value
 }
+
+moved {
+  from = azurerm_role_assignment.web_pubsub_service_owner[0]
+  to   = azurerm_role_assignment.web_pubsub_service_owner["3689a22e-1785-4944-bd9e-113355bfb070"]
+}
+
+moved {
+  from = azurerm_role_assignment.web_pubsub_service_owner[1]
+  to   = azurerm_role_assignment.web_pubsub_service_owner["192df417-f2be-4bd9-8e3e-c08b6e4cb0b8"]
+}
