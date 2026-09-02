@@ -253,11 +253,11 @@ variable "user_ids" {
 }
 
 resource "azurerm_role_assignment" "web_pubsub_service_owner" {
-  # Keep the legacy count address so the existing assignment is not planned
-  # for deletion when this state is reconciled.
-  count = local.local_env != "prod" ? length(var.user_ids) : 0
+  # Preserve the existing for_each state addresses so current assignments are
+  # not replaced during this migration.
+  for_each = local.local_env != "prod" ? toset(var.user_ids) : []
 
   scope                = azurerm_web_pubsub.ped_web_pubsub.id
   role_definition_name = "Web PubSub Service Owner"
-  principal_id         = var.user_ids[count.index]
+  principal_id         = each.value
 }
