@@ -21,7 +21,7 @@ describe("App rate limiting", function () {
 
     const config = commonJsRequire("config");
     config.secrets = {
-      "xui-icp": {
+      rpx: {
         "xui-icp-web-pubsub-primary-connection-string": "Endpoint=https://example.webpubsub.azure.com;AccessKey=test-key;Version=1.0;",
       },
     };

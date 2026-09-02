@@ -5,7 +5,7 @@ const Redis = require(config.redis.import);
 propertiesVolume.addTo(config);
 
 const tlsOptions = {
-  password: config.secrets ? config.secrets["xui-icp"]["xui-icp-redis-password"] : undefined,
+  password: config.secrets ? config.secrets["rpx"]["xui-icp-redis-password"] : undefined,
   tls: true,
 };
 const redisOptions = config.redis.useTLS === "true" ? tlsOptions : {};

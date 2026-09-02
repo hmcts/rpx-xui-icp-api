@@ -17,5 +17,5 @@ jobs:
         with:
           node-version: 24
       - run: yarn --version
-      - run: yarn install --check-cache --mode=skip-build
+      - run: yarn install --check-cache
       - run: yarn cichecks
