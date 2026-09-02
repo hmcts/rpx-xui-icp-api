@@ -649,7 +649,7 @@ __metadata:
     "@types/cookie-parser": "npm:^1.4.3"
     "@types/express": "npm:^4.17.17"
     "@types/helmet": "npm:^4.0.0"
-    "@types/mocha": "npm:^10.0.1"
+    "@types/mocha": "npm:^10.0.10"
     "@types/node": "npm:^22.6.1"
     "@types/require-directory": "npm:^2.1.1"
     "@types/sinon": "npm:^17.0.0"
@@ -668,7 +668,7 @@ __metadata:
     helmet: "npm:^8.1.0"
     ioredis: "npm:^5.4.1"
     ioredis-mock: "npm:^8.9.0"
-    mocha: "npm:^10.7.0"
+    mocha: "npm:^10.8.2"
     nocache: "npm:^4.0.0"
     nodemon: "npm:^3.1.1"
     nyc: "npm:^17.0.0"
@@ -1816,7 +1816,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/mocha@npm:^10.0.1":
+"@types/mocha@npm:^10.0.10":
   version: 10.0.10
   resolution: "@types/mocha@npm:10.0.10"
   checksum: 10c0/d2b8c48138cde6923493e42b38e839695eb42edd04629abe480a8f34c0e3f50dd82a55832c2e8d2b6e6f9e4deb492d7d733e600fbbdd5a0ceccbcfc6844ff9d5
@@ -4782,7 +4782,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mocha@npm:^10.7.0":
+"mocha@npm:^10.8.2":
   version: 10.8.2
   resolution: "mocha@npm:10.8.2"
   dependencies:
