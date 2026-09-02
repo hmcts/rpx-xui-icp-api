@@ -26,8 +26,8 @@ const env = process.env.NODE_ENV || "development";
 
 propertiesVolume.addTo(config);
 
-const APP_INSIGHTS_KEY = config.secrets ? config.secrets.rpx["xui-icp-appinsights-instrumentation-key"] : undefined;
-const primaryConnectionstring = config.secrets ? config.secrets.rpx["xui-icp-web-pubsub-primary-connection-string"] : undefined;
+const APP_INSIGHTS_KEY = config.secrets ? config.secrets["em-icp"]["AppInsightsInstrumentationKey"] : undefined;
+const primaryConnectionstring = config.secrets ? config.secrets["em-icp"]["em-icp-web-pubsub-primary-connection-string"] : undefined;
 
 const logger = Logger.getLogger("app");
 
@@ -45,7 +45,7 @@ if (APP_INSIGHTS_KEY) {
     .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
     .setSendLiveMetrics(true)
     .start();
-  appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = "xui-icp";
+  appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = "em-icp";
 }
 
 let appInsightClient;

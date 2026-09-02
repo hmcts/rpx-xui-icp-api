@@ -4,7 +4,7 @@ gitRevision: GIT_REVISION
 frontendPublicHttpProtocol: PUBLIC_PROTOCOL
 
 service:
-  name: xui-icp
+  name: icp-api
 
 app:
   useCSRFProtection: "true"
@@ -33,7 +33,6 @@ security:
 
 s2s:
   url: "http://localhost:4502"
-  # Temporary compatibility: the reused provider secret belongs to em_icp.
   microservice: "em_icp"
   secret: "AAAAAAAAAAAAAAAA"
 

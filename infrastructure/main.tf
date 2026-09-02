@@ -68,6 +68,12 @@ resource "azurerm_key_vault_secret" "local_s2s_key" {
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
+resource "azurerm_key_vault_secret" "compat_s2s_key" {
+  name         = "microservicekey-em-icp"
+  value        = data.azurerm_key_vault_secret.s2s_key.value
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
 module "application_insights" {
   source = "git@github.com:hmcts/terraform-module-application-insights?ref=4.x"
 
@@ -80,6 +86,12 @@ module "application_insights" {
 
 resource "azurerm_key_vault_secret" "local_app_insights_key" {
   name         = "xui-icp-appinsights-instrumentation-key"
+  value        = module.application_insights.connection_string
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+resource "azurerm_key_vault_secret" "compat_app_insights_key" {
+  name         = "AppInsightsInstrumentationKey"
   value        = module.application_insights.connection_string
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
@@ -120,6 +132,13 @@ module "xui_icp_redis_cache" {
 resource "azurerm_key_vault_secret" "local_redis_password" {
   count        = 1
   name         = "xui-icp-redis-password"
+  value        = module.xui_icp_redis_cache[0].access_key
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+resource "azurerm_key_vault_secret" "compat_redis_password" {
+  count        = 1
+  name         = "redis-password"
   value        = module.xui_icp_redis_cache[0].access_key
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
@@ -190,6 +209,12 @@ resource "azurerm_web_pubsub_hub" "icpHub" {
 
 resource "azurerm_key_vault_secret" "xui_icp_api_web_pubsub_primary_connection_string" {
   name         = "xui-icp-web-pubsub-primary-connection-string"
+  value        = azurerm_web_pubsub.ped_web_pubsub.primary_connection_string
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+resource "azurerm_key_vault_secret" "compat_web_pubsub_primary_connection_string" {
+  name         = "em-icp-web-pubsub-primary-connection-string"
   value        = azurerm_web_pubsub.ped_web_pubsub.primary_connection_string
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }

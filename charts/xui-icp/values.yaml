@@ -24,13 +24,13 @@ nodejs:
   spotInstances:
     enabled: true
   keyVaults:
-    rpx:
+    em-icp:
       resourceGroup: rpx
       secrets:
-        - xui-icp-redis-password
-        - microservicekey-xui-icp
-        - xui-icp-appinsights-instrumentation-key
-        - xui-icp-web-pubsub-primary-connection-string
+        - redis-password
+        - microservicekey-em-icp
+        - AppInsightsInstrumentationKey
+        - em-icp-web-pubsub-primary-connection-string
 
 redis:
   enabled: false
