@@ -27,11 +27,12 @@ locals {
     var.api_gateway_test_certificate_thumbprint,
     "29390B7A235C692DACD93FA0AB90081867177BEC"
   ]
-  thumbprints_in_quotes     = formatlist("&quot;%s&quot;", local.allowed_certificate_thumbprints)
-  thumbprints_in_quotes_str = join(",", local.thumbprints_in_quotes)
-  api_policy                = replace(file("template/api-policy.xml"), "ALLOWED_CERTIFICATE_THUMBPRINTS", local.thumbprints_in_quotes_str)
-  api_base_path             = "${var.product}-icp-api"
-  icp_event_handler_url     = var.env == "prod" ? "https://em-icp.platform.hmcts.net/eventhandler" : "https://em-icp.${var.env}.platform.hmcts.net/eventhandler"
+  thumbprints_in_quotes      = formatlist("&quot;%s&quot;", local.allowed_certificate_thumbprints)
+  thumbprints_in_quotes_str  = join(",", local.thumbprints_in_quotes)
+  api_policy                 = replace(file("template/api-policy.xml"), "ALLOWED_CERTIFICATE_THUMBPRINTS", local.thumbprints_in_quotes_str)
+  api_base_path              = "${var.product}-icp-api"
+  icp_event_handler_url      = var.env == "prod" ? "https://em-icp.platform.hmcts.net/eventhandler" : "https://em-icp.${var.env}.platform.hmcts.net/eventhandler"
+  managed_redis_environments = toset(var.env == "demo" ? [var.env] : [])
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -130,6 +131,45 @@ resource "azurerm_key_vault_secret" "local_redis_password" {
   count        = 1
   name         = "redis-password"
   value        = module.em-icp-redis-cache[0].access_key
+  key_vault_id = module.local_key_vault.key_vault_id
+}
+
+# Deploy Azure Managed Redis alongside the existing cache in demo. The legacy
+# cache remains the application target until connectivity has been validated.
+module "managed_redis" {
+  for_each = local.managed_redis_environments
+
+  source = "git@github.com:hmcts/terraform-module-azure-managed-redis?ref=main"
+
+  product     = var.product
+  component   = var.component
+  env         = var.env
+  location    = var.location
+  common_tags = var.common_tags
+
+  # The legacy demo cache is Basic C1 (1 GB), so Balanced B1 is the closest
+  # Managed Redis starting point for validation.
+  sku_name                  = "Balanced_B1"
+  high_availability_enabled = false
+
+  public_network_access   = "Disabled"
+  create_private_endpoint = true
+  subnet_id               = data.azurerm_subnet.core_infra_redis_subnet.id
+  private_dns_zone_ids = [
+    "/subscriptions/${var.private_endpoint_subscription_id}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
+  ]
+
+  # Retain access-key authentication while the application uses ioredis with
+  # a password supplied through Key Vault.
+  access_keys_authentication_enabled = true
+  persistence_rdb_backup_frequency   = "6h"
+}
+
+resource "azurerm_key_vault_secret" "managed_redis_password" {
+  for_each = local.managed_redis_environments
+
+  name         = "managed-redis-password"
+  value        = module.managed_redis[each.key].primary_access_key
   key_vault_id = module.local_key_vault.key_vault_id
 }
 
