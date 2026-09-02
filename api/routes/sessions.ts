@@ -11,7 +11,7 @@ const config = require("config");
 const router = express.Router();
 const idam = new IdamClient();
 const logger = Logger.getLogger("sessions");
-const primaryConnectionstring = config.secrets ? config.secrets["em-icp"]["em-icp-web-pubsub-primary-connection-string"] : undefined;
+const primaryConnectionstring = config.secrets ? config.secrets["xui-icp"]["xui-icp-web-pubsub-primary-connection-string"] : undefined;
 
 router.get("/icp/sessions/:caseId/:documentId", async (req, res) => {
   const token = req.header("Authorization");

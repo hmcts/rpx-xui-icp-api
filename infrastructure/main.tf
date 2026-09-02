@@ -57,8 +57,7 @@ data "azurerm_key_vault" "s2s_vault" {
 }
 
 data "azurerm_key_vault_secret" "s2s_key" {
-  # Temporary compatibility: the XUI service-auth credential is not provisioned yet.
-  name         = "microservicekey-em-icp"
+  name         = "microservicekey-xui-icp"
   key_vault_id = data.azurerm_key_vault.s2s_vault.id
 }
 

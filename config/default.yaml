@@ -4,7 +4,7 @@ gitRevision: GIT_REVISION
 frontendPublicHttpProtocol: PUBLIC_PROTOCOL
 
 service:
-  name: icp-api
+  name: xui-icp
 
 app:
   useCSRFProtection: "true"
@@ -33,7 +33,7 @@ security:
 
 s2s:
   url: "http://localhost:4502"
-  microservice: "em_icp"
+  microservice: "xui_icp"
   secret: "AAAAAAAAAAAAAAAA"
 
 tokenRefreshTime: 3600000 # (60 mins)
