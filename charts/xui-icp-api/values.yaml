@@ -2,7 +2,7 @@ nodejs:
   applicationPort: 8080
   aadIdentityName: xui
   ingressHost: xui-icp.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctsprod.azurecr.io/xui/icp:latest'
+  image: 'hmctsprod.azurecr.io/xui/icp-api:latest'
   readinessDelay: 30
   readinessTimeout: 5
   livenessDelay: 30

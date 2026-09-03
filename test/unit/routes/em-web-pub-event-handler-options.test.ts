@@ -153,6 +153,18 @@ describe("EmWebPubEventHandlerOptions", () => {
     expect(response.fail.calledOnceWith(401, "User not authorized to access session")).to.be.true;
   });
 
+  it("should expose void-returning callbacks to Web PubSub", () => {
+    const connectResponse = createConnectResponse();
+    const userEventResponse = createUserEventResponse();
+    const eventRequest = createUserEventRequest("unknown", {});
+    const disconnectedRequest = { context: { connectionId: "connectionId", states: {} } } as unknown as DisconnectedRequest;
+
+    expect(emWebPubEventHandlerOptions.handleConnect(createConnectRequest("https://example.com"), connectResponse)).to.be.undefined;
+    expect(emWebPubEventHandlerOptions.handleUserEvent(eventRequest, userEventResponse)).to.be.undefined;
+    expect(emWebPubEventHandlerOptions.onConnected({} as ConnectedRequest)).to.be.undefined;
+    expect(emWebPubEventHandlerOptions.onDisconnected(disconnectedRequest)).to.be.undefined;
+  });
+
   it("should discard malformed token roles", () => {
     const request = createConnectRequest(allowedOrigin);
     request.claims.role = ["malformed-role"];
@@ -169,6 +181,37 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     expect(onJoinStub.calledOnceWith(data, "connectionId")).to.be.true;
     expect(response.success.calledOnce).to.be.true;
+  });
+
+  it("should complete user event work after the callback returns void", async () => {
+    let resolveJoin: () => void = () => undefined;
+    const joinCompletion = new Promise<void>(resolve => {
+      resolveJoin = resolve;
+    });
+    sinon.stub(emWebPubEventHandlerOptions, "onJoin").returns(joinCompletion);
+    const response = createUserEventResponse();
+    const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+
+    expect(emWebPubEventHandlerOptions.handleUserEvent(createUserEventRequest(Actions.SESSION_JOIN, data), response)).to.be.undefined;
+    expect(response.success.notCalled).to.be.true;
+
+    resolveJoin();
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(response.success.calledOnce).to.be.true;
+  });
+
+  it("should report failed user event work after the callback returns void", async () => {
+    const error = new Error("join failed");
+    sinon.stub(emWebPubEventHandlerOptions, "onJoin").rejects(error);
+    const response = createUserEventResponse();
+    const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+
+    expect(emWebPubEventHandlerOptions.handleUserEvent(createUserEventRequest(Actions.SESSION_JOIN, data), response)).to.be.undefined;
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(response.success.notCalled).to.be.true;
+    expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
   });
 
   it("should route presenter update events", async () => {
@@ -238,6 +281,37 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     expect(onRemoveParticipantStub.calledOnceWith("connectionId", "caseId", "documentId")).to.be.true;
     expect(appInsightsStub.trackTrace.calledOnceWith({ message: "onDisconnected user:username" })).to.be.true;
+  });
+
+  it("should complete disconnect cleanup after the callback returns void", async () => {
+    let resolveRemoval: () => void = () => undefined;
+    const removalCompletion = new Promise<void>(resolve => {
+      resolveRemoval = resolve;
+    });
+    const onRemoveParticipantStub = sinon.stub(emWebPubEventHandlerOptions, "onRemoveParticant").returns(removalCompletion);
+
+    expect(emWebPubEventHandlerOptions.onDisconnected({
+      context: { connectionId: "connectionId", states: { caseId: "caseId", documentId: "documentId", username: "username" } },
+    } as unknown as DisconnectedRequest)).to.be.undefined;
+    expect(onRemoveParticipantStub.calledOnce).to.be.true;
+    expect(appInsightsStub.trackTrace.notCalled).to.be.true;
+
+    resolveRemoval();
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(appInsightsStub.trackTrace.calledOnceWith({ message: "onDisconnected user:username" })).to.be.true;
+  });
+
+  it("should report failed disconnect cleanup after the callback returns void", async () => {
+    const error = new Error("disconnect cleanup failed");
+    sinon.stub(emWebPubEventHandlerOptions, "onRemoveParticant").rejects(error);
+
+    expect(emWebPubEventHandlerOptions.onDisconnected({
+      context: { connectionId: "connectionId", states: { caseId: "caseId", documentId: "documentId", username: "username" } },
+    } as unknown as DisconnectedRequest)).to.be.undefined;
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
   });
 
   it("should only trace disconnected clients without complete session state", async () => {
