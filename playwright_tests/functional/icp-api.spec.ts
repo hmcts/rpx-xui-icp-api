@@ -70,7 +70,15 @@ test.describe("ICP API functional contracts", () => {
     await expect(response.json()).resolves.toMatchObject({
       status: "UP",
       redis: { status: "UP" },
+      buildInfo: { name: "xui-icp", project: "xui-icp" },
     });
+  });
+
+  test("exposes the API documentation", async ({ request }) => {
+    const response = await request.get("/swagger/");
+
+    expect(response.status()).toBe(200);
+    await expect(response.text()).resolves.toContain("swagger-ui");
   });
 
   test("rejects a session request without an Authorization header", async ({ request }) => {
@@ -78,6 +86,42 @@ test.describe("ICP API functional contracts", () => {
 
     expect(response.status()).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: "Unauthorized user" });
+  });
+
+  test("rejects a session request with an invalid token", async ({ request }) => {
+    const response = await request.get("/icp/sessions/playwright-case/playwright-document", {
+      headers: { Authorization: "Bearer invalid-playwright-token" },
+    });
+
+    expect(response.status()).toBe(401);
+  });
+
+  test("rejects a session request with a null case identifier", async ({ request }) => {
+    const token = await requestUserToken();
+    const response = await getSession(request, "null", "playwright-document", token);
+
+    expect(response.status()).toBe(400);
+  });
+
+  test("rejects a session request with an undefined case identifier", async ({ request }) => {
+    const token = await requestUserToken();
+    const response = await getSession(request, "undefined", "playwright-document", token);
+
+    expect(response.status()).toBe(400);
+  });
+
+  test("rejects a session request with a null document identifier", async ({ request }) => {
+    const token = await requestUserToken();
+    const response = await getSession(request, "playwright-case", "null", token);
+
+    expect(response.status()).toBe(400);
+  });
+
+  test("rejects a session request with an undefined document identifier", async ({ request }) => {
+    const token = await requestUserToken();
+    const response = await getSession(request, "playwright-case", "undefined", token);
+
+    expect(response.status()).toBe(400);
   });
 
   test("creates and reuses an authenticated hearing session", async ({ request }) => {
