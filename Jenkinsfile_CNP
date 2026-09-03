@@ -22,6 +22,7 @@ def secrets = [
   'rpx-${env}': [
     secret('microservicekey-em-gw', 'FUNCTIONAL_TEST_CLIENT_S2S_TOKEN'),
     secret('show-oauth2-token', 'FUNCTIONAL_TEST_CLIENT_OAUTH_SECRET'),
+    secret('password', 'FUNCTIONAL_TEST_USER_PASSWORD'),
     secret('xui-icp-web-pubsub-primary-connection-string', 'WEB_PUBSUB_PRIMARY_CONN_STRING')
   ]
 ]

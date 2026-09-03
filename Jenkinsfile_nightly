@@ -21,7 +21,8 @@ env.REDIS_PORT = 6380
 def secrets = [
   'rpx-${env}': [
     secret('microservicekey-em-gw', 'FUNCTIONAL_TEST_CLIENT_S2S_TOKEN'),
-    secret('show-oauth2-token', 'FUNCTIONAL_TEST_CLIENT_OAUTH_SECRET')
+    secret('show-oauth2-token', 'FUNCTIONAL_TEST_CLIENT_OAUTH_SECRET'),
+    secret('password', 'FUNCTIONAL_TEST_USER_PASSWORD')
   ]
 ]
 
