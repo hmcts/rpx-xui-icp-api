@@ -8,7 +8,7 @@ properties([
 
 def type = "nodejs"
 def product = "xui"
-def component = "icp"
+def component = "icp-api"
 def channel = '#xui-pipeline'
 
 env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"

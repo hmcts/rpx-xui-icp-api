@@ -2,7 +2,7 @@ version: '2'
 
 services:
   xui-icp:
-    image: hmctsprod.azurecr.io/xui/icp:aat-a808eaa1
+    image: hmctsprod.azurecr.io/xui/icp-api:aat-a808eaa1
     build:
       context: .
       args:
