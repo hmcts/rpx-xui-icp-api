@@ -62,11 +62,13 @@ data "azurerm_key_vault_secret" "s2s_key" {
 }
 
 data "azurerm_key_vault_secret" "existing_xui_s2s_key" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "microservicekey-xui-icp"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 data "azurerm_key_vault_secret" "existing_em_s2s_key" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "microservicekey-em-icp"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
@@ -88,13 +90,17 @@ resource "azurerm_key_vault_secret" "compat_s2s_key" {
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.local_s2s_key
-  id = data.azurerm_key_vault_secret.existing_xui_s2s_key.id
+  id = data.azurerm_key_vault_secret.existing_xui_s2s_key[0].id
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.compat_s2s_key
-  id = data.azurerm_key_vault_secret.existing_em_s2s_key.id
+  id = data.azurerm_key_vault_secret.existing_em_s2s_key[0].id
 }
 
 module "application_insights" {
@@ -127,6 +133,7 @@ resource "azurerm_key_vault_secret" "compat_app_insights_key" {
 }
 
 data "azurerm_key_vault_secret" "existing_xui_app_insights_key" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "xui-icp-appinsights-instrumentation-key"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
@@ -137,8 +144,10 @@ data "azurerm_key_vault_secret" "existing_compat_app_insights_key" {
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.local_app_insights_key
-  id = data.azurerm_key_vault_secret.existing_xui_app_insights_key.id
+  id = data.azurerm_key_vault_secret.existing_xui_app_insights_key[0].id
 }
 
 import {
@@ -198,23 +207,29 @@ resource "azurerm_key_vault_secret" "compat_redis_password" {
 }
 
 data "azurerm_key_vault_secret" "existing_xui_redis_password" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "xui-icp-redis-password"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 data "azurerm_key_vault_secret" "existing_compat_redis_password" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "redis-password"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.local_redis_password[0]
-  id = data.azurerm_key_vault_secret.existing_xui_redis_password.id
+  id = data.azurerm_key_vault_secret.existing_xui_redis_password[0].id
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.compat_redis_password[0]
-  id = data.azurerm_key_vault_secret.existing_compat_redis_password.id
+  id = data.azurerm_key_vault_secret.existing_compat_redis_password[0].id
 }
 
 resource "azurerm_web_pubsub" "ped_web_pubsub" {
@@ -298,23 +313,29 @@ resource "azurerm_key_vault_secret" "compat_web_pubsub_primary_connection_string
 }
 
 data "azurerm_key_vault_secret" "existing_xui_web_pubsub_primary_connection_string" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "xui-icp-web-pubsub-primary-connection-string"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 data "azurerm_key_vault_secret" "existing_compat_web_pubsub_primary_connection_string" {
+  count        = local.local_env == "prod" ? 0 : 1
   name         = "em-icp-web-pubsub-primary-connection-string"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.xui_icp_api_web_pubsub_primary_connection_string
-  id = data.azurerm_key_vault_secret.existing_xui_web_pubsub_primary_connection_string.id
+  id = data.azurerm_key_vault_secret.existing_xui_web_pubsub_primary_connection_string[0].id
 }
 
 import {
+  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+
   to = azurerm_key_vault_secret.compat_web_pubsub_primary_connection_string
-  id = data.azurerm_key_vault_secret.existing_compat_web_pubsub_primary_connection_string.id
+  id = data.azurerm_key_vault_secret.existing_compat_web_pubsub_primary_connection_string[0].id
 }
 
 variable "user_ids" {
