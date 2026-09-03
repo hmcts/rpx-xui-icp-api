@@ -17,7 +17,7 @@
     "sonar-scanner": "node_modules/sonar-scanner/bin/sonar-scanner",
     "sonar-scan": "cross-env NODE_PATH=. sonar-scanner",
     "test:smoke": "NODE_ENV=test mocha -r ts-node/register 'test/smoke/healthcheck.test.ts' --timeout 25000 --reporter spec --exit",
-    "test:playwright:functional": "playwright test --config=playwright.config.ts --project=functional",
+    "test:playwright:functional": "sh -c 'if [ \"${1:-}\" = \"--\" ]; then shift; fi; PLAYWRIGHT_TEST_OUTPUT_DIR=\"${PLAYWRIGHT_TEST_OUTPUT_DIR:-functional-output/tests/playwright-functional/test-results}\" PLAYWRIGHT_JUNIT_OUTPUT=\"${PLAYWRIGHT_JUNIT_OUTPUT:-functional-output/tests/playwright-functional/playwright-functional-result.xml}\" PLAYWRIGHT_REPORT_FOLDER=\"${PLAYWRIGHT_REPORT_FOLDER:-functional-output/tests/playwright-functional/odhin-report}\" PLAYWRIGHT_REPORT_INDEX_FILENAME=\"${PLAYWRIGHT_REPORT_INDEX_FILENAME:-xui-playwright-functional.html}\" PLAYWRIGHT_REPORT_TITLE=\"${PLAYWRIGHT_REPORT_TITLE:-RPX XUI ICP API Playwright Functional}\" npx playwright test --config=playwright.config.ts --project=functional \"$@\"' --",
     "test:functional": "yarn test:playwright:functional",
     "test:fullfunctional": "yarn test:playwright:functional",
     "cichecks": "yarn && yarn lint  && yarn test"
@@ -38,6 +38,7 @@
     "helmet": "^8.1.0",
     "ioredis": "^5.4.1",
     "nocache": "^4.0.0",
+    "node-html-parser": "^7.0.0",
     "require-directory": "^2.1.1",
     "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
@@ -88,6 +89,7 @@
     "mocha": "^10.8.2",
     "nodemon": "^3.1.1",
     "nyc": "^17.0.0",
+    "odhin-reports-playwright": "patch:odhin-reports-playwright@npm%3A1.1.8#~/.yarn/patches/odhin-reports-playwright-npm-1.1.8-a445ed88b7.patch",
     "sinon": "^19.0.2",
     "sonar-scanner": "^3.1.0"
   },

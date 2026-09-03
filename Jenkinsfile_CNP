@@ -17,6 +17,30 @@ def type = "nodejs"
 def product = "xui"
 def component = "icp-api"
 def channel = '#xui-pipeline'
+def playwrightFunctionalOutputRoot = 'functional-output/tests/playwright-functional'
+def playwrightFunctionalReportFile = 'xui-playwright-functional.html'
+
+def configurePlaywrightFunctional = { String targetEnvironment ->
+  env.PLAYWRIGHT_TEST_OUTPUT_DIR = "${playwrightFunctionalOutputRoot}/test-results"
+  env.PLAYWRIGHT_JUNIT_OUTPUT = "${playwrightFunctionalOutputRoot}/playwright-functional-result.xml"
+  env.PLAYWRIGHT_REPORT_FOLDER = "${playwrightFunctionalOutputRoot}/odhin-report"
+  env.PLAYWRIGHT_REPORT_INDEX_FILENAME = playwrightFunctionalReportFile
+  env.PLAYWRIGHT_REPORT_TITLE = "RPX XUI ICP API Playwright Functional (${targetEnvironment})"
+  env.TEST_TYPE = targetEnvironment
+}
+
+def publishPlaywrightFunctional = { String reportName ->
+  steps.sh("node scripts/ensure-odhin-report.js --report-dir '${playwrightFunctionalOutputRoot}/odhin-report' --report-file '${playwrightFunctionalReportFile}' --suite-name '${reportName}'")
+  steps.publishHTML([
+    allowMissing         : false,
+    alwaysLinkToLastBuild: true,
+    keepAll              : true,
+    reportDir            : "${playwrightFunctionalOutputRoot}/odhin-report/",
+    reportFiles          : playwrightFunctionalReportFile,
+    reportName           : reportName
+  ])
+  steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
+}
 
 def secrets = [
   'rpx-${env}': [
@@ -42,4 +66,11 @@ withPipeline(type, product, component) {
   enableAksStagingDeployment()
   disableLegacyDeployment()
   syncBranchesWithMaster(branchesToSync)
+
+  before('functionalTest:preview') {
+    configurePlaywrightFunctional('preview')
+  }
+  afterAlways('functionalTest:preview') {
+    publishPlaywrightFunctional('PREVIEW XUI ICP API Functional Test')
+  }
 }
