@@ -45,9 +45,12 @@ describe("RedisClient", () => {
   });
 
   it("it should log Redis client errors", () => {
-    client.emit("error", { message: "connection error" });
-  });
+    const consoleLog = sandbox.stub(console, "log");
 
+    client.emit("error", { message: "connection error" });
+
+    expect(consoleLog.calledWith("Error in Redis: ", "connection error")).to.be.true;
+  });
   it("it should lock session with caseId", async () => {
     sandbox.spy(client, "watch");
     await redisClient.getLock("1234");
