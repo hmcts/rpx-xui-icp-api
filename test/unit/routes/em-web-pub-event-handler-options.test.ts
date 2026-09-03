@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { WebPubSubGroup, WebPubSubServiceClient } from "@azure/web-pubsub";
-import { ConnectRequest, ConnectResponseHandler, ConnectionContext, UserEventResponseHandler } from "@azure/web-pubsub-express";
+import { ConnectRequest, ConnectResponseHandler, ConnectionContext } from "@azure/web-pubsub-express";
 import { EmWebPubEventHandlerOptions } from "../../../api/em-web-pub-event-handler-options";
 import { Actions } from "../../../api/model/actions";
 import { RedisClient } from "../../../api/redis-client";
@@ -220,21 +220,19 @@ describe("EmWebPubEventHandlerOptions", () => {
   });
 
   it("should set and read connection state", () => {
-    const setState = sinon.stub();
-    const response = { setState, success: sinon.stub(), fail: sinon.stub() } as unknown as UserEventResponseHandler;
+    const response = { setState: sinon.stub(), success: sinon.stub(), fail: sinon.stub() };
     const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
 
     emWebPubEventHandlerOptions.setState(response, data);
 
-    expect(setState.args).to.deep.equal([
+    expect(response.setState.args).to.deep.equal([
       ["caseId", "caseId"],
       ["documentId", "documentId"],
       ["username", "username"],
     ]);
     const context = { states: { caseId: "caseId", documentId: "documentId", username: "username" } };
-    const connectionContext = context as unknown as ConnectionContext;
-    expect(emWebPubEventHandlerOptions.getCaseIdFromState(connectionContext)).to.equal("caseId");
-    expect(emWebPubEventHandlerOptions.getDocumentIdFromState(connectionContext)).to.equal("documentId");
-    expect(emWebPubEventHandlerOptions.getUsernameFromState(connectionContext)).to.equal("username");
+    expect(emWebPubEventHandlerOptions.getCaseIdFromState(context as unknown as ConnectionContext)).to.equal("caseId");
+    expect(emWebPubEventHandlerOptions.getDocumentIdFromState(context as unknown as ConnectionContext)).to.equal("documentId");
+    expect(emWebPubEventHandlerOptions.getUsernameFromState(context as unknown as ConnectionContext)).to.equal("username");
   });
 });
