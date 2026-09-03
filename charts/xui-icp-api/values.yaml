@@ -11,7 +11,7 @@ nodejs:
   environment:
     REFORM_SERVICE_NAME: xui-icp
     REFORM_TEAM: xui-icp
-    REDIS_HOST: xui-icp-redis-cache-{{ .Values.global.environment }}.redis.cache.windows.net
+    REDIS_HOST: xui-icp-api-redis-cache-{{ .Values.global.environment }}.redis.cache.windows.net
     REDIS_PORT: 6380
     USE_REDIS: true
     REDIS_USE_TLS: true
