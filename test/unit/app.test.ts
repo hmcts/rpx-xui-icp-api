@@ -81,6 +81,20 @@ describe("App rate limiting", function () {
     expect(secondResponse.status).to.not.equal(429);
   });
 
+  it("reports healthy when Redis is ready", async () => {
+    const { client: redis } = commonJsRequire("../../api/redis");
+    const status = redis.status;
+    redis.status = "ready";
+
+    try {
+      const response = await axios.get(`${address}/health`, { validateStatus: () => true });
+
+      expect(response.status).to.equal(200);
+    } finally {
+      redis.status = status;
+    }
+  });
+
   it("rate limits session requests", async () => {
     const headers = { Authorization: "Bearer token" };
 
