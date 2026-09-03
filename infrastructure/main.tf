@@ -61,6 +61,16 @@ data "azurerm_key_vault_secret" "s2s_key" {
   key_vault_id = data.azurerm_key_vault.s2s_vault.id
 }
 
+data "azurerm_key_vault_secret" "existing_xui_s2s_key" {
+  name         = "microservicekey-xui-icp"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+data "azurerm_key_vault_secret" "existing_em_s2s_key" {
+  name         = "microservicekey-em-icp"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
 resource "azurerm_key_vault_secret" "local_s2s_key" {
   name         = "microservicekey-xui-icp"
   value        = data.azurerm_key_vault_secret.s2s_key.value
@@ -71,6 +81,20 @@ resource "azurerm_key_vault_secret" "compat_s2s_key" {
   name         = "microservicekey-em-icp"
   value        = data.azurerm_key_vault_secret.s2s_key.value
   key_vault_id = data.azurerm_key_vault.shared_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+import {
+  to = azurerm_key_vault_secret.local_s2s_key
+  id = data.azurerm_key_vault_secret.existing_xui_s2s_key.id
+}
+
+import {
+  to = azurerm_key_vault_secret.compat_s2s_key
+  id = data.azurerm_key_vault_secret.existing_em_s2s_key.id
 }
 
 module "application_insights" {
@@ -80,6 +104,9 @@ module "application_insights" {
   product             = var.product
   name                = "${local.app_full_name}-appinsights"
   resource_group_name = azurerm_resource_group.rg.name
+  # The subscription has reached its activity-log-alert limit. Use the
+  # module's quota-safe scheduled-query alert instead.
+  alert_limit_reached = true
   common_tags         = var.common_tags
 }
 
@@ -93,6 +120,30 @@ resource "azurerm_key_vault_secret" "compat_app_insights_key" {
   name         = "AppInsightsInstrumentationKey"
   value        = module.application_insights.connection_string
   key_vault_id = data.azurerm_key_vault.shared_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+data "azurerm_key_vault_secret" "existing_xui_app_insights_key" {
+  name         = "xui-icp-appinsights-instrumentation-key"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+data "azurerm_key_vault_secret" "existing_compat_app_insights_key" {
+  name         = "AppInsightsInstrumentationKey"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+import {
+  to = azurerm_key_vault_secret.local_app_insights_key
+  id = data.azurerm_key_vault_secret.existing_xui_app_insights_key.id
+}
+
+import {
+  to = azurerm_key_vault_secret.compat_app_insights_key
+  id = data.azurerm_key_vault_secret.existing_compat_app_insights_key.id
 }
 
 
@@ -140,6 +191,30 @@ resource "azurerm_key_vault_secret" "compat_redis_password" {
   name         = "redis-password"
   value        = module.xui_icp_redis_cache[0].access_key
   key_vault_id = data.azurerm_key_vault.shared_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+data "azurerm_key_vault_secret" "existing_xui_redis_password" {
+  name         = "xui-icp-redis-password"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+data "azurerm_key_vault_secret" "existing_compat_redis_password" {
+  name         = "redis-password"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+import {
+  to = azurerm_key_vault_secret.local_redis_password[0]
+  id = data.azurerm_key_vault_secret.existing_xui_redis_password.id
+}
+
+import {
+  to = azurerm_key_vault_secret.compat_redis_password[0]
+  id = data.azurerm_key_vault_secret.existing_compat_redis_password.id
 }
 
 resource "azurerm_web_pubsub" "ped_web_pubsub" {
@@ -216,6 +291,30 @@ resource "azurerm_key_vault_secret" "compat_web_pubsub_primary_connection_string
   name         = "em-icp-web-pubsub-primary-connection-string"
   value        = azurerm_web_pubsub.ped_web_pubsub.primary_connection_string
   key_vault_id = data.azurerm_key_vault.shared_vault.id
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+data "azurerm_key_vault_secret" "existing_xui_web_pubsub_primary_connection_string" {
+  name         = "xui-icp-web-pubsub-primary-connection-string"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+data "azurerm_key_vault_secret" "existing_compat_web_pubsub_primary_connection_string" {
+  name         = "em-icp-web-pubsub-primary-connection-string"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
+import {
+  to = azurerm_key_vault_secret.xui_icp_api_web_pubsub_primary_connection_string
+  id = data.azurerm_key_vault_secret.existing_xui_web_pubsub_primary_connection_string.id
+}
+
+import {
+  to = azurerm_key_vault_secret.compat_web_pubsub_primary_connection_string
+  id = data.azurerm_key_vault_secret.existing_compat_web_pubsub_primary_connection_string.id
 }
 
 variable "user_ids" {
@@ -227,10 +326,20 @@ variable "user_ids" {
   description = "List of user IDs to grant the Web PubSub Service Owner role to."
 }
 
+variable "manage_web_pubsub_role_assignments" {
+  type        = bool
+  default     = false
+  description = "Opt in to user Web PubSub role assignments when platform RBAC permits them."
+}
+
 resource "azurerm_role_assignment" "web_pubsub_service_owner" {
-  for_each = local.local_env != "prod" ? toset(var.user_ids) : []
+  for_each = local.local_env != "prod" && var.manage_web_pubsub_role_assignments ? toset(var.user_ids) : toset([])
 
   scope                = azurerm_web_pubsub.ped_web_pubsub.id
   role_definition_name = "Web PubSub Service Owner"
   principal_id         = each.value
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
