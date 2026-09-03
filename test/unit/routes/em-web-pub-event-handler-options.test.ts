@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { WebPubSubGroup, WebPubSubServiceClient } from "@azure/web-pubsub";
-import { ConnectRequest, ConnectResponseHandler } from "@azure/web-pubsub-express";
+import { ConnectRequest, ConnectResponseHandler, ConnectionContext } from "@azure/web-pubsub-express";
 import { EmWebPubEventHandlerOptions } from "../../../api/em-web-pub-event-handler-options";
 import { Actions } from "../../../api/model/actions";
 import { RedisClient } from "../../../api/redis-client";
@@ -12,7 +12,7 @@ describe("EmWebPubEventHandlerOptions", () => {
   let redisClientStub: sinon.SinonStubbedInstance<RedisClient>;
   let webPubSubServiceClientStub: sinon.SinonStubbedInstance<WebPubSubServiceClient>;
   let emWebPubEventHandlerOptions: EmWebPubEventHandlerOptions;
-  let appInsightsStub: { trackTrace: sinon.SinonStub };
+  let appInsightsStub: { trackTrace: sinon.SinonStub; trackException: sinon.SinonStub };
   const allowedOrigin = "https://manage-case.demo.platform.hmcts.net";
 
   const createConnectRequest = (origin: string, roleGroup = "caseId--documentId"): ConnectRequest => ({
@@ -50,7 +50,7 @@ describe("EmWebPubEventHandlerOptions", () => {
   beforeEach(() => {
     redisClientStub = sinon.createStubInstance(RedisClient);
     webPubSubServiceClientStub = sinon.createStubInstance(WebPubSubServiceClient);
-    appInsightsStub = { trackTrace: sinon.stub() };
+    appInsightsStub = { trackTrace: sinon.stub(), trackException: sinon.stub() };
     emWebPubEventHandlerOptions = new EmWebPubEventHandlerOptions(webPubSubServiceClientStub, appInsightsStub as unknown as TelemetryClient, redisClientStub, allowedOrigin);
   });
 
@@ -189,5 +189,50 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     expect(updatePresenterStub.calledOnce).to.be.true;
     expect(updatePresenterStub.calledWith({ caseId: "caseId", documentId: "documentId", presenterId: "", presenterName: "" })).to.be.true;
+  });
+
+  it("should remove an existing participant", async () => {
+    const sessionId = "sessionId";
+    const connectionId = "connectionId";
+    const groupClientStub = {
+      removeConnection: sinon.stub().resolves(),
+      sendToAll: sinon.stub().resolves(),
+    };
+
+    redisClientStub.getSessionId.returns(sessionId);
+    redisClientStub.getSession.resolves({ participants: JSON.stringify({ [connectionId]: "username" }) } as Session);
+    redisClientStub.getLock.resolves();
+    webPubSubServiceClientStub.group.returns(groupClientStub as unknown as WebPubSubGroup);
+    webPubSubServiceClientStub.connectionExists.resolves(true);
+
+    await emWebPubEventHandlerOptions.onRemoveParticant(connectionId, "caseId", "documentId");
+
+    expect(redisClientStub.updateParticipants.calledWith(sessionId, {})).to.be.true;
+  });
+
+  it("should report participant removal errors", async () => {
+    redisClientStub.getSessionId.returns("sessionId");
+    redisClientStub.getSession.rejects(new Error("Redis unavailable"));
+
+    await emWebPubEventHandlerOptions.onRemoveParticant("connectionId", "caseId", "documentId");
+
+    expect(appInsightsStub.trackException.calledOnce).to.be.true;
+  });
+
+  it("should set and read connection state", () => {
+    const response = { setState: sinon.stub(), success: sinon.stub(), fail: sinon.stub() };
+    const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+
+    emWebPubEventHandlerOptions.setState(response, data);
+
+    expect(response.setState.args).to.deep.equal([
+      ["caseId", "caseId"],
+      ["documentId", "documentId"],
+      ["username", "username"],
+    ]);
+    const context = { states: { caseId: "caseId", documentId: "documentId", username: "username" } };
+    expect(emWebPubEventHandlerOptions.getCaseIdFromState(context as unknown as ConnectionContext)).to.equal("caseId");
+    expect(emWebPubEventHandlerOptions.getDocumentIdFromState(context as unknown as ConnectionContext)).to.equal("documentId");
+    expect(emWebPubEventHandlerOptions.getUsernameFromState(context as unknown as ConnectionContext)).to.equal("username");
   });
 });
