@@ -17,8 +17,6 @@
     "sonar-scanner": "node_modules/sonar-scanner/bin/sonar-scanner",
     "sonar-scan": "cross-env NODE_PATH=. sonar-scanner",
     "test:smoke": "NODE_ENV=test mocha -r ts-node/register 'test/smoke/healthcheck.test.ts' --timeout 25000 --reporter spec --exit",
-    "test:functional": "cross-env NODE_PATH=. mocha --require ts-node/register 'test/functional/*.test.ts' --timeout 25000 --reporter spec --recursive --exit",
-    "test:fullfunctional": "yarn test:functional",
     "cichecks": "yarn && yarn lint  && yarn test"
   },
   "dependencies": {

@@ -183,6 +183,24 @@ describe("EmWebPubEventHandlerOptions", () => {
     expect(response.success.calledOnce).to.be.true;
   });
 
+  it("should complete user event work after the callback returns void", async () => {
+    let resolveJoin: () => void = () => undefined;
+    const joinCompletion = new Promise<void>(resolve => {
+      resolveJoin = resolve;
+    });
+    sinon.stub(emWebPubEventHandlerOptions, "onJoin").returns(joinCompletion);
+    const response = createUserEventResponse();
+    const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+
+    expect(emWebPubEventHandlerOptions.handleUserEvent(createUserEventRequest(Actions.SESSION_JOIN, data), response)).to.be.undefined;
+    expect(response.success.notCalled).to.be.true;
+
+    resolveJoin();
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(response.success.calledOnce).to.be.true;
+  });
+
   it("should route presenter update events", async () => {
     const data = { caseId: "caseId", documentId: "documentId", presenterId: "presenterId", presenterName: "presenterName" };
     const onUpdatePresenterStub = sinon.stub(emWebPubEventHandlerOptions, "onUpdatePresenter").resolves();
@@ -249,6 +267,25 @@ describe("EmWebPubEventHandlerOptions", () => {
     } as unknown as DisconnectedRequest);
 
     expect(onRemoveParticipantStub.calledOnceWith("connectionId", "caseId", "documentId")).to.be.true;
+    expect(appInsightsStub.trackTrace.calledOnceWith({ message: "onDisconnected user:username" })).to.be.true;
+  });
+
+  it("should complete disconnect cleanup after the callback returns void", async () => {
+    let resolveRemoval: () => void = () => undefined;
+    const removalCompletion = new Promise<void>(resolve => {
+      resolveRemoval = resolve;
+    });
+    const onRemoveParticipantStub = sinon.stub(emWebPubEventHandlerOptions, "onRemoveParticant").returns(removalCompletion);
+
+    expect(emWebPubEventHandlerOptions.onDisconnected({
+      context: { connectionId: "connectionId", states: { caseId: "caseId", documentId: "documentId", username: "username" } },
+    } as unknown as DisconnectedRequest)).to.be.undefined;
+    expect(onRemoveParticipantStub.calledOnce).to.be.true;
+    expect(appInsightsStub.trackTrace.notCalled).to.be.true;
+
+    resolveRemoval();
+    await new Promise<void>(resolve => setImmediate(resolve));
+
     expect(appInsightsStub.trackTrace.calledOnceWith({ message: "onDisconnected user:username" })).to.be.true;
   });
 

@@ -109,7 +109,6 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     this.appInsightClient.trackTrace({ message: "onConnected" });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onDisconnected = (disconnectedRequest: DisconnectedRequest): void => {
     void this.onDisconnectedAsync(disconnectedRequest);
   };
