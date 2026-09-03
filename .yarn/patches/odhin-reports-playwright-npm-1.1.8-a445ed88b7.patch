@@ -51,16 +51,16 @@ index b631af70f15c2a4c7b76f6a8d9d4f6a2c9d8e4a1..3005ca02f4f85dfaf1f4f179f430f9b6
 --- a/lib/html/chartStatus.html
 +++ b/lib/html/chartStatus.html
 @@ -38,5 +38,5 @@
-  							<tr>
+ 							<tr>
 -								<th class="odhin-text-2 px-2">Status</th>
 +								<th class="odhin-text-2 px-2">Status (Final Outcomes)</th>
-  								<th class="odhin-text-2 px-2">Tests</th>
-  								<th class="odhin-text-2 px-2">Percentage</th>
-  							</tr>
+ 								<th class="odhin-text-2 px-2">Tests</th>
+ 								<th class="odhin-text-2 px-2">Percentage</th>
+ 							</tr>
 @@ -87,6 +87,54 @@
-  									{{.TestFlakyPercentage}}%
-  								</td>
-  							</tr>
+ 									{{.TestFlakyPercentage}}%
+ 								</td>
+ 							</tr>
 +							<tr>
 +								<th class="odhin-text-2 px-2 pt-3" colspan="3">Execution Detail</th>
 +							</tr>
@@ -109,9 +109,9 @@ index b631af70f15c2a4c7b76f6a8d9d4f6a2c9d8e4a1..3005ca02f4f85dfaf1f4f179f430f9b6
 +								<td class="chart-status-interrupted-info">{{.TransientInterruptedAttempts}}</td>
 +								<td></td>
 +							</tr>
-  						</table>
-  					</td>
-  				</tr>
+ 						</table>
+ 					</td>
+ 				</tr>
 diff --git a/lib/generate.js b/lib/generate.js
 index a4679f3122e76eb27f18b7019666cf129b3f2b56..0ee54f845b6f2e4574e2d24a2c14ddae2f1ff8d8 100644
 --- a/lib/generate.js
