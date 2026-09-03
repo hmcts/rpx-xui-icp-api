@@ -21,7 +21,7 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     this.allowedOrigin = allowedOrigin === undefined ? this.getAllowedOrigin() : allowedOrigin.trim();
   }
 
-  handleConnect = async (connectRequest: ConnectRequest, connectResponse: ConnectResponseHandler) => {
+  handleConnect = (connectRequest: ConnectRequest, connectResponse: ConnectResponseHandler) => {
     const origin = this.getOriginHeader(connectRequest);
     if (!this.isOriginAllowed(origin)) {
       connectResponse.fail(401, "Origin not authorized to access session");
@@ -70,7 +70,11 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     }).filter(Boolean);
   }
 
-  handleUserEvent = async (userEventRequest: UserEventRequest, userEventResponse: UserEventResponseHandler) => {
+  handleUserEvent = (userEventRequest: UserEventRequest, userEventResponse: UserEventResponseHandler): void => {
+    void this.handleUserEventAsync(userEventRequest, userEventResponse);
+  };
+
+  private async handleUserEventAsync(userEventRequest: UserEventRequest, userEventResponse: UserEventResponseHandler): Promise<void> {
     if (userEventRequest.context.eventName === Actions.SESSION_JOIN) {
       const data = userEventRequest.data as { caseId: string, sessionId: string, username: string, documentId: string };
       this.setState(userEventResponse, data);
@@ -98,15 +102,19 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     }
    
     userEventResponse.success();
-  };
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onConnected = async (connectedRequest: ConnectedRequest) => {
+  onConnected = (connectedRequest: ConnectedRequest) => {
     this.appInsightClient.trackTrace({ message: "onConnected" });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onDisconnected = async(disconnectedRequest: DisconnectedRequest) => {
+  onDisconnected = (disconnectedRequest: DisconnectedRequest): void => {
+    void this.onDisconnectedAsync(disconnectedRequest);
+  };
+
+  private async onDisconnectedAsync(disconnectedRequest: DisconnectedRequest): Promise<void> {
     const caseId = this.getCaseIdFromState(disconnectedRequest.context);
     const documentId = this.getDocumentIdFromState(disconnectedRequest.context);
     const username = this.getUsernameFromState(disconnectedRequest.context);
@@ -114,7 +122,7 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
       await this.onRemoveParticant(disconnectedRequest.context.connectionId, caseId, documentId);
     }
     this.appInsightClient.trackTrace({ message: `onDisconnected user:${username}` });
-  };
+  }
 
   async onJoin(data: { caseId: string, sessionId: string, username: string, documentId: string }, connectionId: string): Promise<void> {
     const sessionId = this.redisClient.getSessionId(data.caseId, data.documentId);

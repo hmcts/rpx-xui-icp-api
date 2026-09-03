@@ -43,7 +43,7 @@ describe("bootstrap options", () => {
     config.redis.useTLS = "false";
     const { client } = commonJsRequire("../../api/redis");
 
-    expect(client.options.tls).to.equal(undefined);
+    expect(client.options.tls).to.be.undefined;
     expect(client.options.password).to.not.exist;
   });
 

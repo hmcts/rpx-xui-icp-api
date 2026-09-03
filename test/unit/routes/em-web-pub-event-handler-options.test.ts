@@ -153,6 +153,18 @@ describe("EmWebPubEventHandlerOptions", () => {
     expect(response.fail.calledOnceWith(401, "User not authorized to access session")).to.be.true;
   });
 
+  it("should expose void-returning callbacks to Web PubSub", () => {
+    const connectResponse = createConnectResponse();
+    const userEventResponse = createUserEventResponse();
+    const eventRequest = createUserEventRequest("unknown", {});
+    const disconnectedRequest = { context: { connectionId: "connectionId", states: {} } } as unknown as DisconnectedRequest;
+
+    expect(emWebPubEventHandlerOptions.handleConnect(createConnectRequest("https://example.com"), connectResponse)).to.be.undefined;
+    expect(emWebPubEventHandlerOptions.handleUserEvent(eventRequest, userEventResponse)).to.be.undefined;
+    expect(emWebPubEventHandlerOptions.onConnected({} as ConnectedRequest)).to.be.undefined;
+    expect(emWebPubEventHandlerOptions.onDisconnected(disconnectedRequest)).to.be.undefined;
+  });
+
   it("should discard malformed token roles", () => {
     const request = createConnectRequest(allowedOrigin);
     request.claims.role = ["malformed-role"];
