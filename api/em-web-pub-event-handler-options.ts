@@ -71,7 +71,9 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
   }
 
   handleUserEvent = (userEventRequest: UserEventRequest, userEventResponse: UserEventResponseHandler): void => {
-    void this.handleUserEventAsync(userEventRequest, userEventResponse);
+    void this.handleUserEventAsync(userEventRequest, userEventResponse).catch(error => {
+      this.appInsightClient.trackException({ exception: error });
+    });
   };
 
   private async handleUserEventAsync(userEventRequest: UserEventRequest, userEventResponse: UserEventResponseHandler): Promise<void> {
@@ -110,7 +112,9 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
   };
 
   onDisconnected = (disconnectedRequest: DisconnectedRequest): void => {
-    void this.onDisconnectedAsync(disconnectedRequest);
+    void this.onDisconnectedAsync(disconnectedRequest).catch(error => {
+      this.appInsightClient.trackException({ exception: error });
+    });
   };
 
   private async onDisconnectedAsync(disconnectedRequest: DisconnectedRequest): Promise<void> {

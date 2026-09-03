@@ -201,6 +201,19 @@ describe("EmWebPubEventHandlerOptions", () => {
     expect(response.success.calledOnce).to.be.true;
   });
 
+  it("should report failed user event work after the callback returns void", async () => {
+    const error = new Error("join failed");
+    sinon.stub(emWebPubEventHandlerOptions, "onJoin").rejects(error);
+    const response = createUserEventResponse();
+    const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+
+    expect(emWebPubEventHandlerOptions.handleUserEvent(createUserEventRequest(Actions.SESSION_JOIN, data), response)).to.be.undefined;
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(response.success.notCalled).to.be.true;
+    expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
+  });
+
   it("should route presenter update events", async () => {
     const data = { caseId: "caseId", documentId: "documentId", presenterId: "presenterId", presenterName: "presenterName" };
     const onUpdatePresenterStub = sinon.stub(emWebPubEventHandlerOptions, "onUpdatePresenter").resolves();
@@ -287,6 +300,18 @@ describe("EmWebPubEventHandlerOptions", () => {
     await new Promise<void>(resolve => setImmediate(resolve));
 
     expect(appInsightsStub.trackTrace.calledOnceWith({ message: "onDisconnected user:username" })).to.be.true;
+  });
+
+  it("should report failed disconnect cleanup after the callback returns void", async () => {
+    const error = new Error("disconnect cleanup failed");
+    sinon.stub(emWebPubEventHandlerOptions, "onRemoveParticant").rejects(error);
+
+    expect(emWebPubEventHandlerOptions.onDisconnected({
+      context: { connectionId: "connectionId", states: { caseId: "caseId", documentId: "documentId", username: "username" } },
+    } as unknown as DisconnectedRequest)).to.be.undefined;
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
   });
 
   it("should only trace disconnected clients without complete session state", async () => {
