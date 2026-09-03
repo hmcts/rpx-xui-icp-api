@@ -664,7 +664,7 @@ __metadata:
     cross-env: "npm:^7.0.3"
     eslint: "npm:8.57.1"
     express: "npm:^5.2.1"
-    express-rate-limit: "npm:^7.3.0"
+    express-rate-limit: "npm:^7.5.0"
     helmet: "npm:^8.1.0"
     ioredis: "npm:^5.4.1"
     ioredis-mock: "npm:^8.9.0"
@@ -3339,7 +3339,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express-rate-limit@npm:^7.3.0":
+"express-rate-limit@npm:^7.5.0":
   version: 7.5.1
   resolution: "express-rate-limit@npm:7.5.1"
   peerDependencies:

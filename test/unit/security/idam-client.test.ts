@@ -41,4 +41,19 @@ describe("IdamClient", () => {
         expect(idamClient.logger.info.called).to.be.false;
       });
   });
+
+  it("it should log and rethrow token verification errors", async () => {
+    const error = new Error("verification error");
+    sandbox.stub(idamClient, "getUserInfo").rejects(error);
+    sandbox.spy(idamClient.logger, "error");
+
+    try {
+      await idamClient.verifyToken("Bearer jwtToken");
+      expect.fail("Expected token verification to fail");
+    } catch (err) {
+      expect(err).to.equal(error);
+    }
+
+    expect(idamClient.logger.error.calledTwice).to.be.true;
+  });
 });

@@ -35,6 +35,19 @@ describe("RedisClient", () => {
     expect(redisClient.logger.error.calledOnce).to.be.true;
   });
 
+  it("it should fail when the session does not exist", async () => {
+    sandbox.stub(client, "hgetall").resolves(null);
+    sandbox.spy(redisClient.logger, "error");
+
+    await redisClient.getSession("missing");
+
+    expect(redisClient.logger.error.calledOnce).to.be.true;
+  });
+
+  it("it should log Redis client errors", () => {
+    client.emit("error", { message: "connection error" });
+  });
+
   it("it should lock session with caseId", async () => {
     sandbox.spy(client, "watch");
     await redisClient.getLock("1234");
