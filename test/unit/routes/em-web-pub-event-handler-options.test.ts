@@ -220,7 +220,7 @@ describe("EmWebPubEventHandlerOptions", () => {
   });
 
   it("should set and read connection state", () => {
-    const response = { setState: sinon.stub() };
+    const response = { setState: sinon.stub(), success: sinon.stub(), fail: sinon.stub() };
     const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
 
     emWebPubEventHandlerOptions.setState(response, data);
@@ -231,8 +231,8 @@ describe("EmWebPubEventHandlerOptions", () => {
       ["username", "username"],
     ]);
     const context = { states: { caseId: "caseId", documentId: "documentId", username: "username" } };
-    expect(emWebPubEventHandlerOptions.getCaseIdFromState(context as ConnectionContext)).to.equal("caseId");
-    expect(emWebPubEventHandlerOptions.getDocumentIdFromState(context as ConnectionContext)).to.equal("documentId");
-    expect(emWebPubEventHandlerOptions.getUsernameFromState(context as ConnectionContext)).to.equal("username");
+    expect(emWebPubEventHandlerOptions.getCaseIdFromState(context as unknown as ConnectionContext)).to.equal("caseId");
+    expect(emWebPubEventHandlerOptions.getDocumentIdFromState(context as unknown as ConnectionContext)).to.equal("documentId");
+    expect(emWebPubEventHandlerOptions.getUsernameFromState(context as unknown as ConnectionContext)).to.equal("username");
   });
 });
