@@ -122,6 +122,21 @@ data "azurerm_subnet" "cft_infra_web_pub_sub_subnet" {
   provider             = azurerm.webpubsub_vnet_provider
 }
 
+# The production cache was created before this Terraform state was introduced.
+# Adopt it into the module state instead of attempting to create a duplicate.
+data "azurerm_redis_cache" "existing_xui_icp_redis_cache" {
+  count               = var.env == "prod" ? 1 : 0
+  name                = "${local.app_full_name}-redis-cache-${var.env}"
+  resource_group_name = "${local.app_full_name}-redis-cache-cache-${var.env}"
+}
+
+import {
+  for_each = var.env == "prod" ? toset(["import"]) : toset([])
+
+  to = module.xui_icp_redis_cache[0].azurerm_redis_cache.redis
+  id = data.azurerm_redis_cache.existing_xui_icp_redis_cache[0].id
+}
+
 module "xui_icp_redis_cache" {
   source                        = "git@github.com:hmcts/cnp-module-redis?ref=master"
   product                       = "${var.product}-${var.component}-redis-cache"
