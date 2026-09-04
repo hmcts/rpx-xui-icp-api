@@ -208,23 +208,29 @@ test.describe("ICP API functional contracts", () => {
         documentId,
         origin: allowedOrigin,
       }, async (clientA) => {
-        const participantsAfterAJoin = clientB.waitForEvent("IcpParticipantsListUpdated");
-        await clientA.sendEvent("IcpClientJoinSession", {
-          caseId,
-          documentId,
-          sessionId: clientASession.session.sessionId,
-          username: clientASession.username,
-        });
-        expect(Object.values((await participantsAfterAJoin).data as Record<string, string>)).toEqual([clientASession.username]);
-        const participantsAfterJoin = clientB.waitForEvent("IcpParticipantsListUpdated");
+        const participantsAfterBJoin = clientB.waitForEvent("IcpParticipantsListUpdated");
         await clientB.sendEvent("IcpClientJoinSession", {
           caseId,
           documentId,
           sessionId: clientBSession.session.sessionId,
           username: clientBSession.username,
         });
-        expect(Object.values((await participantsAfterJoin).data as Record<string, string>).sort()).toEqual(
-          [clientASession.username, clientBSession.username].sort(),
+        expect(Object.values((await participantsAfterBJoin).data as Record<string, string>)).toEqual([clientBSession.username]);
+
+        const participantsAfterAJoinOnB = clientB.waitForEvent("IcpParticipantsListUpdated");
+        const participantsAfterAJoinOnA = clientA.waitForEvent("IcpParticipantsListUpdated");
+        await clientA.sendEvent("IcpClientJoinSession", {
+          caseId,
+          documentId,
+          sessionId: clientASession.session.sessionId,
+          username: clientASession.username,
+        });
+        const expectedParticipants = [clientASession.username, clientBSession.username].sort();
+        expect(Object.values((await participantsAfterAJoinOnB).data as Record<string, string>).sort()).toEqual(
+          expectedParticipants,
+        );
+        expect(Object.values((await participantsAfterAJoinOnA).data as Record<string, string>).sort()).toEqual(
+          expectedParticipants,
         );
 
         const presenterUpdated = clientB.waitForEvent("IcpPresenterUpdated");
