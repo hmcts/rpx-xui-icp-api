@@ -31,15 +31,22 @@ describe("XUI ICP chart Redis contract", () => {
     const defaultConfig = readFileSync(join(process.cwd(), "config/default.yaml"), "utf8");
     const customEnvironmentVariables = readFileSync(join(process.cwd(), "config/custom-environment-variables.yaml"), "utf8");
     const infrastructure = readFileSync(join(process.cwd(), "infrastructure/main.tf"), "utf8");
+    const versions = readFileSync(join(process.cwd(), "infrastructure/versions.tf"), "utf8");
     const values = readFileSync(join(process.cwd(), "charts/xui-icp-api/values.yaml"), "utf8");
+    const nightly = readFileSync(join(process.cwd(), "Jenkinsfile_nightly"), "utf8");
 
     expect(defaultConfig).not.to.include("s2s:");
     expect(customEnvironmentVariables).not.to.include("s2s:");
     expect(defaultConfig).not.to.include('microservice: "em_icp"');
     expect(infrastructure).not.to.match(/microservicekey-(em|xui)-icp/);
     expect(values).not.to.match(/microservicekey-(em|xui)-icp/);
-    expect(infrastructure).not.to.include('name         = "AppInsightsInstrumentationKey"');
-    expect(infrastructure).not.to.include('name         = "redis-password"');
+    expect(infrastructure).not.to.match(/name\s*=\s*"AppInsightsInstrumentationKey"/);
+    expect(infrastructure).not.to.match(/name\s*=\s*"redis-password"/);
     expect(infrastructure).not.to.include("em-icp-web-pubsub-primary-connection-string");
+    expect(values).not.to.include("IDAM_S2S_URL");
+    expect(nightly).not.to.include("IDAM_S2S_URL");
+    expect(values).to.include("IDAM_API_BASE_URL:");
+    expect(nightly).to.include("env.IDAM_API_BASE_URL");
+    expect(versions).to.match(/required_version\s*=\s*">=\s*1\.7"/);
   });
 });
