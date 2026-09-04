@@ -39,7 +39,7 @@ env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"
 env.IDAM_API_BASE_URL = "https://idam-api.aat.platform.hmcts.net"
 env.IDAM_S2S_URL = "http://rpe-service-auth-provider-aat.service.core-compute-aat.internal"
 env.IDAM_WEBSHOW_WHITELIST = 'https://em-show-aat.service.core-compute-aat.internal/oauth2/callback'
-env.REDIS_HOST = "xui-icp-redis-cache-aat.redis.cache.windows.net"
+env.REDIS_HOST = "xui-icp-api-redis-cache-aat.redis.cache.windows.net"
 env.REDIS_PORT = 6380
 
 def secrets = [
