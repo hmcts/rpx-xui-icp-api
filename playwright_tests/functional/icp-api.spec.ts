@@ -1,11 +1,12 @@
 import { request as playwrightRequest, test, expect, type APIRequestContext } from "@playwright/test";
+import { openWebPubSubClient, withWebPubSubClient } from "./web-pubsub-test-client";
 
 const idamBaseUrl = process.env.IDAM_API_BASE_URL ?? "http://localhost:5000";
 const functionalUserEmail = process.env.FUNCTIONAL_TEST_USER_EMAIL ?? "xui-icp-functional@hmcts.net";
 const functionalUserPassword = process.env.FUNCTIONAL_TEST_USER_PASSWORD;
 const functionalClientSecret = process.env.FUNCTIONAL_TEST_CLIENT_OAUTH_SECRET;
 
-async function requestUserToken(): Promise<string> {
+async function requestUserToken(email = functionalUserEmail): Promise<string> {
   if (!functionalUserPassword) {
     throw new Error("FUNCTIONAL_TEST_USER_PASSWORD must be configured for authenticated functional tests");
   }
@@ -17,7 +18,7 @@ async function requestUserToken(): Promise<string> {
   try {
     const accountResponse = await idam.post("/testing-support/accounts", {
       data: {
-        email: functionalUserEmail,
+        email,
         password: functionalUserPassword,
         forename: "XUI",
         surname: "ICP Functional Test",
@@ -36,7 +37,7 @@ async function requestUserToken(): Promise<string> {
         redirect_uri: process.env.IDAM_WEBSHOW_WHITELIST ?? "http://localhost:8080/oauth2redirect",
         client_id: "webshow",
         client_secret: functionalClientSecret,
-        username: functionalUserEmail,
+        username: email,
         password: functionalUserPassword,
       },
     });
@@ -149,6 +150,108 @@ test.describe("ICP API functional contracts", () => {
     await expect(secondResponse.json()).resolves.toMatchObject({
       username: firstBody.username,
       session: { sessionId: firstBody.session.sessionId, caseId, documentId },
+    });
+  });
+
+  test("proves AAT Web PubSub collaboration between two authenticated users", async ({ request }) => {
+    test.skip(process.env.TEST_TYPE !== "aat", "AAT Web PubSub collaboration requires the protected AAT environment");
+
+    const allowedOrigin = process.env.FUNCTIONAL_TEST_ALLOWED_ORIGIN;
+    const expectedWebPubSubHost = process.env.FUNCTIONAL_TEST_EXPECTED_WS_HOST;
+    if (!allowedOrigin || !expectedWebPubSubHost) {
+      throw new Error("FUNCTIONAL_TEST_ALLOWED_ORIGIN and FUNCTIONAL_TEST_EXPECTED_WS_HOST must be configured for AAT collaboration");
+    }
+
+    const clientAEmail = functionalUserEmail.replace("@", "-client-a@");
+    const clientBEmail = functionalUserEmail.replace("@", "-client-b@");
+    const caseId = `playwright-case-${Date.now()}`;
+    const documentId = `playwright-document-${Date.now()}`;
+    const clientAToken = await requestUserToken(clientAEmail);
+    const clientBToken = await requestUserToken(clientBEmail);
+    const clientASessionResponse = await getSession(request, caseId, documentId, clientAToken);
+    const clientBSessionResponse = await getSession(request, caseId, documentId, clientBToken);
+
+    expect(clientASessionResponse.status()).toBe(200);
+    expect(clientBSessionResponse.status()).toBe(200);
+    const clientASession = await clientASessionResponse.json();
+    const clientBSession = await clientBSessionResponse.json();
+    const clientAAccessToken = clientASessionResponse.headers()["x-access-token"];
+    const clientBAccessToken = clientBSessionResponse.headers()["x-access-token"];
+
+    expect(new URL(clientASession.session.connectionUrl).hostname).toBe(expectedWebPubSubHost);
+    expect(clientASession.session.sessionId).toBe(clientBSession.session.sessionId);
+    expect(clientAAccessToken).toBeTruthy();
+    expect(clientBAccessToken).toBeTruthy();
+
+    await expect(openWebPubSubClient({
+      connectionUrl: clientASession.session.connectionUrl,
+      accessToken: clientAAccessToken,
+      sessionId: clientASession.session.sessionId,
+      caseId,
+      documentId,
+      origin: "https://example.com",
+    })).rejects.toMatchObject({ statusCode: 401 });
+
+    await withWebPubSubClient({
+      connectionUrl: clientBSession.session.connectionUrl,
+      accessToken: clientBAccessToken,
+      sessionId: clientBSession.session.sessionId,
+      caseId,
+      documentId,
+      origin: allowedOrigin,
+    }, async (clientB) => {
+      const afterLeave = await withWebPubSubClient({
+        connectionUrl: clientASession.session.connectionUrl,
+        accessToken: clientAAccessToken,
+        sessionId: clientASession.session.sessionId,
+        caseId,
+        documentId,
+        origin: allowedOrigin,
+      }, async (clientA) => {
+        const participantsAfterAJoin = clientB.waitForEvent("IcpParticipantsListUpdated");
+        await clientA.sendEvent("IcpClientJoinSession", {
+          caseId,
+          documentId,
+          sessionId: clientASession.session.sessionId,
+          username: clientASession.username,
+        });
+        await expect(participantsAfterAJoin).resolves.toMatchObject({
+          data: expect.any(Object),
+        });
+        const participantsAfterJoin = clientB.waitForEvent("IcpParticipantsListUpdated");
+        await clientB.sendEvent("IcpClientJoinSession", {
+          caseId,
+          documentId,
+          sessionId: clientBSession.session.sessionId,
+          username: clientBSession.username,
+        });
+        expect(Object.values((await participantsAfterJoin).data as Record<string, string>)).toEqual(
+          expect.arrayContaining([clientASession.username, clientBSession.username]),
+        );
+
+        const presenterUpdated = clientB.waitForEvent("IcpPresenterUpdated");
+        await clientA.sendEvent("IcpNewPresenterStartsPresenting", {
+          caseId,
+          documentId,
+          presenterId: clientA.connectionId,
+          presenterName: clientASession.username,
+        });
+        await expect(presenterUpdated).resolves.toMatchObject({
+          data: { id: clientA.connectionId, username: clientASession.username },
+        });
+
+        const screenUpdated = clientB.waitForEvent("IcpScreenUpdated");
+        await clientA.sendEvent("IcpUpdateScreen", { caseId, documentId, body: { page: 2 } });
+        await expect(screenUpdated).resolves.toMatchObject({ data: { page: 2 } });
+
+        const participantsAfterLeave = clientB.waitForEvent("IcpParticipantsListUpdated");
+        await clientA.sendEvent("IcpClientLeaveSession", { caseId, documentId, connectionId: clientA.connectionId });
+        return { participantsAfterLeave };
+      });
+
+      const remainingParticipants = Object.values((await afterLeave.participantsAfterLeave).data as Record<string, string>);
+      expect(remainingParticipants).not.toContain(clientASession.username);
+      expect(remainingParticipants).toContain(clientBSession.username);
     });
   });
 });

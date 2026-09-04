@@ -20,6 +20,12 @@ def configurePlaywrightFunctional = { String targetEnvironment ->
   env.PLAYWRIGHT_REPORT_INDEX_FILENAME = playwrightFunctionalReportFile
   env.PLAYWRIGHT_REPORT_TITLE = "RPX XUI ICP API Playwright Functional (${targetEnvironment})"
   env.TEST_TYPE = targetEnvironment
+  env.FUNCTIONAL_TEST_ALLOWED_ORIGIN = targetEnvironment == 'prod' ?
+    'https://manage-case.platform.hmcts.net' :
+    "https://manage-case.${targetEnvironment}.platform.hmcts.net"
+  env.FUNCTIONAL_TEST_EXPECTED_WS_HOST = targetEnvironment == 'prod' ?
+    'xui-icp-webpubsub.platform.hmcts.net' :
+    "xui-icp-webpubsub.${targetEnvironment}.platform.hmcts.net"
 }
 
 def publishPlaywrightFunctional = { String reportName ->
