@@ -200,7 +200,7 @@ test.describe("ICP API functional contracts", () => {
       documentId,
       origin: allowedOrigin,
     }, async (clientB) => {
-      const afterLeave = await withWebPubSubClient({
+      await withWebPubSubClient({
         connectionUrl: clientASession.session.connectionUrl,
         accessToken: clientAAccessToken,
         sessionId: clientASession.session.sessionId,
@@ -215,9 +215,7 @@ test.describe("ICP API functional contracts", () => {
           sessionId: clientASession.session.sessionId,
           username: clientASession.username,
         });
-        await expect(participantsAfterAJoin).resolves.toMatchObject({
-          data: expect.any(Object),
-        });
+        expect(Object.values((await participantsAfterAJoin).data as Record<string, string>)).toEqual([clientASession.username]);
         const participantsAfterJoin = clientB.waitForEvent("IcpParticipantsListUpdated");
         await clientB.sendEvent("IcpClientJoinSession", {
           caseId,
@@ -225,8 +223,8 @@ test.describe("ICP API functional contracts", () => {
           sessionId: clientBSession.session.sessionId,
           username: clientBSession.username,
         });
-        expect(Object.values((await participantsAfterJoin).data as Record<string, string>)).toEqual(
-          expect.arrayContaining([clientASession.username, clientBSession.username]),
+        expect(Object.values((await participantsAfterJoin).data as Record<string, string>).sort()).toEqual(
+          [clientASession.username, clientBSession.username].sort(),
         );
 
         const presenterUpdated = clientB.waitForEvent("IcpPresenterUpdated");
@@ -246,12 +244,9 @@ test.describe("ICP API functional contracts", () => {
 
         const participantsAfterLeave = clientB.waitForEvent("IcpParticipantsListUpdated");
         await clientA.sendEvent("IcpClientLeaveSession", { caseId, documentId, connectionId: clientA.connectionId });
-        return { participantsAfterLeave };
+        await clientA.close();
+        expect(Object.values((await participantsAfterLeave).data as Record<string, string>)).toEqual([clientBSession.username]);
       });
-
-      const remainingParticipants = Object.values((await afterLeave.participantsAfterLeave).data as Record<string, string>);
-      expect(remainingParticipants).not.toContain(clientASession.username);
-      expect(remainingParticipants).toContain(clientBSession.username);
     });
   });
 });

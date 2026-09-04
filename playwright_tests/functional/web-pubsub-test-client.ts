@@ -11,6 +11,16 @@ type WebPubSubClientOptions = {
 
 type ServerEvent = { eventName: string; data: unknown };
 
+type PendingEvent = {
+  eventName: string;
+  resolve: (event: ServerEvent) => void;
+  reject: (error: Error) => void;
+  timeout: NodeJS.Timeout;
+};
+
+const EVENT_TIMEOUT_MS = 10_000;
+const CLOSE_TIMEOUT_MS = 5_000;
+
 export type WebPubSubTestClient = {
   readonly connectionId: string;
   sendEvent(event: string, data: unknown): Promise<void>;
@@ -26,37 +36,75 @@ export async function openWebPubSubClient(options: WebPubSubClientOptions): Prom
   url.searchParams.set("documentId", options.documentId);
 
   const socket = new WebSocket(url, "json.webpubsub.azure.v1", { headers: { Origin: options.origin } });
-  const events = new Map<string, ServerEvent>();
   let connectionId = "";
-  let waitingEventName = "";
-  let resolveEvent: ((event: ServerEvent) => void) | undefined;
+  let pendingEvent: PendingEvent | undefined;
+  let resolveConnection: (() => void) | undefined;
+  let rejectConnection: ((error: Error) => void) | undefined;
+  let connectionTimeout: NodeJS.Timeout | undefined;
+  let socketFailure: Error | undefined;
+
+  const finishConnection = (error?: Error) => {
+    if (!resolveConnection || !rejectConnection) {
+      return;
+    }
+    if (connectionTimeout) {
+      clearTimeout(connectionTimeout);
+    }
+    const resolve = resolveConnection;
+    const reject = rejectConnection;
+    resolveConnection = undefined;
+    rejectConnection = undefined;
+    if (error) {
+      reject(error);
+    } else {
+      resolve();
+    }
+  };
+
+  const rejectPendingEvent = (error: Error) => {
+    if (!pendingEvent) {
+      return;
+    }
+    clearTimeout(pendingEvent.timeout);
+    const { reject } = pendingEvent;
+    pendingEvent = undefined;
+    reject(error);
+  };
+
+  socket.on("error", (error) => {
+    socketFailure = error;
+    finishConnection(error);
+    rejectPendingEvent(error);
+  });
+  socket.on("close", () => {
+    const error = new Error("Web PubSub socket closed");
+    socketFailure ??= error;
+    finishConnection(error);
+    rejectPendingEvent(error);
+  });
+  socket.once("unexpected-response", (_request, response) => {
+    finishConnection(Object.assign(new Error(`Web PubSub upgrade failed with status ${response.statusCode}`), { statusCode: response.statusCode }));
+  });
+  socket.on("message", (raw) => {
+    const message = JSON.parse(raw.toString()) as { type?: string; event?: string; connectionId?: string; data?: { eventName?: string; data?: unknown } };
+    if (message.type === "system" && message.event === "connected" && message.connectionId) {
+      connectionId = message.connectionId;
+      finishConnection();
+    }
+
+    const eventName = message.data?.eventName;
+    if (eventName && pendingEvent?.eventName === eventName) {
+      clearTimeout(pendingEvent.timeout);
+      const { resolve } = pendingEvent;
+      pendingEvent = undefined;
+      resolve({ eventName, data: message.data?.data });
+    }
+  });
 
   const connected = new Promise<void>((resolve, reject) => {
-    const rejectConnection = (error: Error) => reject(error);
-    socket.once("error", rejectConnection);
-    socket.once("unexpected-response", (_request, response) => {
-      reject(Object.assign(new Error(`Web PubSub upgrade failed with status ${response.statusCode}`), { statusCode: response.statusCode }));
-    });
-    socket.on("message", (raw) => {
-      const message = JSON.parse(raw.toString()) as { type?: string; event?: string; connectionId?: string; data?: { eventName?: string; data?: unknown } };
-      if (message.type === "system" && message.event === "connected" && message.connectionId) {
-        connectionId = message.connectionId;
-        socket.off("error", rejectConnection);
-        resolve();
-      }
-
-      const eventName = message.data?.eventName;
-      if (eventName) {
-        const event = { eventName, data: message.data?.data };
-        if (waitingEventName === eventName && resolveEvent) {
-          resolveEvent(event);
-          resolveEvent = undefined;
-          waitingEventName = "";
-        } else {
-          events.set(eventName, event);
-        }
-      }
-    });
+    resolveConnection = resolve;
+    rejectConnection = reject;
+    connectionTimeout = setTimeout(() => finishConnection(new Error("Timed out waiting for Web PubSub connection")), EVENT_TIMEOUT_MS);
   });
 
   await connected;
@@ -69,30 +117,35 @@ export async function openWebPubSubClient(options: WebPubSubClientOptions): Prom
         socket.send(JSON.stringify({ type: "event", event, data }), (error) => error ? reject(error) : resolve());
       });
     },
-    waitForEvent(eventName, timeoutMs = 10_000) {
-      const event = events.get(eventName);
-      if (event) {
-        events.delete(eventName);
-        return Promise.resolve(event);
+    waitForEvent(eventName, timeoutMs = EVENT_TIMEOUT_MS) {
+      if (socketFailure) {
+        return Promise.reject(socketFailure);
+      }
+      if (pendingEvent) {
+        return Promise.reject(new Error(`Already waiting for Web PubSub event ${pendingEvent.eventName}`));
       }
 
       return new Promise((resolve, reject) => {
-        waitingEventName = eventName;
         const timeout = setTimeout(() => {
-          resolveEvent = undefined;
-          waitingEventName = "";
-          reject(new Error(`Timed out waiting for Web PubSub event ${eventName}`));
+          if (pendingEvent?.eventName === eventName) {
+            pendingEvent = undefined;
+            reject(new Error(`Timed out waiting for Web PubSub event ${eventName}`));
+          }
         }, timeoutMs);
-        resolveEvent = (receivedEvent) => {
-          clearTimeout(timeout);
-          resolve(receivedEvent);
-        };
+        pendingEvent = { eventName, resolve, reject, timeout };
       });
     },
     async close() {
       if (socket.readyState !== WebSocket.CLOSED) {
         await new Promise<void>((resolve) => {
-          socket.once("close", resolve);
+          const timeout = setTimeout(() => {
+            socket.terminate();
+            resolve();
+          }, CLOSE_TIMEOUT_MS);
+          socket.once("close", () => {
+            clearTimeout(timeout);
+            resolve();
+          });
           socket.close();
         });
       }
