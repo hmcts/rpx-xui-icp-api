@@ -26,4 +26,20 @@ describe("XUI ICP chart Redis contract", () => {
     expect(sonar).to.include("sonar.projectKey=xui-icp-api");
     expect(sonar).to.include("sonar.projectName=XUI ICP API");
   });
+
+  it("does not deploy unused S2S or generic compatibility secrets", () => {
+    const defaultConfig = readFileSync(join(process.cwd(), "config/default.yaml"), "utf8");
+    const customEnvironmentVariables = readFileSync(join(process.cwd(), "config/custom-environment-variables.yaml"), "utf8");
+    const infrastructure = readFileSync(join(process.cwd(), "infrastructure/main.tf"), "utf8");
+    const values = readFileSync(join(process.cwd(), "charts/xui-icp-api/values.yaml"), "utf8");
+
+    expect(defaultConfig).not.to.include("s2s:");
+    expect(customEnvironmentVariables).not.to.include("s2s:");
+    expect(defaultConfig).not.to.include('microservice: "em_icp"');
+    expect(infrastructure).not.to.match(/microservicekey-(em|xui)-icp/);
+    expect(values).not.to.match(/microservicekey-(em|xui)-icp/);
+    expect(infrastructure).not.to.include('name         = "AppInsightsInstrumentationKey"');
+    expect(infrastructure).not.to.include('name         = "redis-password"');
+    expect(infrastructure).not.to.include("em-icp-web-pubsub-primary-connection-string");
+  });
 });

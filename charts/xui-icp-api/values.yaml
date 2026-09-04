@@ -30,7 +30,6 @@ nodejs:
       resourceGroup: rpx
       secrets:
         - xui-icp-redis-password
-        - microservicekey-xui-icp
         - xui-icp-appinsights-instrumentation-key
         - xui-icp-web-pubsub-primary-connection-string
 
