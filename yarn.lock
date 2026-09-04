@@ -663,6 +663,7 @@ __metadata:
     "@types/require-directory": "npm:^2.1.1"
     "@types/sinon": "npm:^17.0.0"
     "@types/uuid": "npm:^10.0.0"
+    "@types/ws": "npm:^8.18.1"
     "@typescript-eslint/eslint-plugin": "npm:^7.12.0"
     "@typescript-eslint/parser": "npm:^8.6.0"
     applicationinsights: "npm:^3.15.1"
@@ -691,6 +692,7 @@ __metadata:
     tsconfig-paths: "npm:^4.2.0"
     typescript: "npm:^6.0.3"
     uuid: "npm:^11.0.0"
+    ws: "npm:^8.21.1"
   languageName: unknown
   linkType: soft
 
@@ -1964,6 +1966,15 @@ __metadata:
   version: 10.0.0
   resolution: "@types/uuid@npm:10.0.0"
   checksum: 10c0/9a1404bf287164481cb9b97f6bb638f78f955be57c40c6513b7655160beb29df6f84c915aaf4089a1559c216557dc4d2f79b48d978742d3ae10b937420ddac60
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:^8.18.1":
+  version: 8.18.1
+  resolution: "@types/ws@npm:8.18.1"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/61aff1129143fcc4312f083bc9e9e168aa3026b7dd6e70796276dcfb2c8211c4292603f9c4864fae702f2ed86e4abd4d38aa421831c2fd7f856c931a481afbab
   languageName: node
   linkType: hard
 

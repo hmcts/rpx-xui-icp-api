@@ -31,11 +31,6 @@ redis:
 security:
   referrerPolicy: "origin"
 
-s2s:
-  url: "http://localhost:4502"
-  microservice: "em_icp"
-  secret: "AAAAAAAAAAAAAAAA"
-
 tokenRefreshTime: 3600000 # (60 mins)
 
 icp:

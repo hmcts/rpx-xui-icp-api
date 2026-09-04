@@ -20,7 +20,6 @@ provider "azurerm" {
 locals {
   app_full_name = "${var.product}-${var.component}"
   local_env     = var.env == "preview" ? "aat" : var.env
-  s2s_key       = data.azurerm_key_vault_secret.s2s_key.value
   # list of the thumbprints of the SSL certificates that should be accepted by the API (gateway)
   allowed_certificate_thumbprints = [
     # API tests
@@ -51,56 +50,20 @@ data "azurerm_key_vault" "shared_vault" {
   resource_group_name = "rpx-${local.local_env}"
 }
 
-data "azurerm_key_vault" "s2s_vault" {
-  name                = "s2s-${local.local_env}"
-  resource_group_name = "rpe-service-auth-provider-${local.local_env}"
-}
-
-data "azurerm_key_vault_secret" "s2s_key" {
-  name         = "microservicekey-em-icp"
-  key_vault_id = data.azurerm_key_vault.s2s_vault.id
-}
-
-data "azurerm_key_vault_secret" "existing_xui_s2s_key" {
-  count        = local.local_env == "prod" ? 0 : 1
-  name         = "microservicekey-xui-icp"
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-data "azurerm_key_vault_secret" "existing_em_s2s_key" {
-  count        = local.local_env == "prod" ? 0 : 1
-  name         = "microservicekey-em-icp"
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-resource "azurerm_key_vault_secret" "local_s2s_key" {
-  name         = "microservicekey-xui-icp"
-  value        = data.azurerm_key_vault_secret.s2s_key.value
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-resource "azurerm_key_vault_secret" "compat_s2s_key" {
-  name         = "microservicekey-em-icp"
-  value        = data.azurerm_key_vault_secret.s2s_key.value
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
+removed {
+  from = azurerm_key_vault_secret.local_s2s_key
 
   lifecycle {
-    ignore_changes = all
+    destroy = false
   }
 }
 
-import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+removed {
+  from = azurerm_key_vault_secret.compat_s2s_key
 
-  to = azurerm_key_vault_secret.local_s2s_key
-  id = data.azurerm_key_vault_secret.existing_xui_s2s_key[0].id
-}
-
-import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
-
-  to = azurerm_key_vault_secret.compat_s2s_key
-  id = data.azurerm_key_vault_secret.existing_em_s2s_key[0].id
+  lifecycle {
+    destroy = false
+  }
 }
 
 module "application_insights" {
@@ -122,24 +85,9 @@ resource "azurerm_key_vault_secret" "local_app_insights_key" {
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
-resource "azurerm_key_vault_secret" "compat_app_insights_key" {
-  name         = "AppInsightsInstrumentationKey"
-  value        = module.application_insights.connection_string
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-
-  lifecycle {
-    ignore_changes = all
-  }
-}
-
 data "azurerm_key_vault_secret" "existing_xui_app_insights_key" {
   count        = local.local_env == "prod" ? 0 : 1
   name         = "xui-icp-appinsights-instrumentation-key"
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-data "azurerm_key_vault_secret" "existing_compat_app_insights_key" {
-  name         = "AppInsightsInstrumentationKey"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
@@ -150,9 +98,12 @@ import {
   id = data.azurerm_key_vault_secret.existing_xui_app_insights_key[0].id
 }
 
-import {
-  to = azurerm_key_vault_secret.compat_app_insights_key
-  id = data.azurerm_key_vault_secret.existing_compat_app_insights_key.id
+removed {
+  from = azurerm_key_vault_secret.compat_app_insights_key
+
+  lifecycle {
+    destroy = false
+  }
 }
 
 
@@ -195,26 +146,9 @@ resource "azurerm_key_vault_secret" "local_redis_password" {
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
-resource "azurerm_key_vault_secret" "compat_redis_password" {
-  count        = 1
-  name         = "redis-password"
-  value        = module.xui_icp_redis_cache[0].access_key
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-
-  lifecycle {
-    ignore_changes = all
-  }
-}
-
 data "azurerm_key_vault_secret" "existing_xui_redis_password" {
   count        = local.local_env == "prod" ? 0 : 1
   name         = "xui-icp-redis-password"
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-data "azurerm_key_vault_secret" "existing_compat_redis_password" {
-  count        = local.local_env == "prod" ? 0 : 1
-  name         = "redis-password"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
@@ -225,11 +159,12 @@ import {
   id = data.azurerm_key_vault_secret.existing_xui_redis_password[0].id
 }
 
-import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+removed {
+  from = azurerm_key_vault_secret.compat_redis_password
 
-  to = azurerm_key_vault_secret.compat_redis_password[0]
-  id = data.azurerm_key_vault_secret.existing_compat_redis_password[0].id
+  lifecycle {
+    destroy = false
+  }
 }
 
 resource "azurerm_web_pubsub" "ped_web_pubsub" {
@@ -302,25 +237,9 @@ resource "azurerm_key_vault_secret" "xui_icp_api_web_pubsub_primary_connection_s
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
-resource "azurerm_key_vault_secret" "compat_web_pubsub_primary_connection_string" {
-  name         = "em-icp-web-pubsub-primary-connection-string"
-  value        = azurerm_web_pubsub.ped_web_pubsub.primary_connection_string
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-
-  lifecycle {
-    ignore_changes = all
-  }
-}
-
 data "azurerm_key_vault_secret" "existing_xui_web_pubsub_primary_connection_string" {
   count        = local.local_env == "prod" ? 0 : 1
   name         = "xui-icp-web-pubsub-primary-connection-string"
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-data "azurerm_key_vault_secret" "existing_compat_web_pubsub_primary_connection_string" {
-  count        = local.local_env == "prod" ? 0 : 1
-  name         = "em-icp-web-pubsub-primary-connection-string"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
@@ -331,11 +250,12 @@ import {
   id = data.azurerm_key_vault_secret.existing_xui_web_pubsub_primary_connection_string[0].id
 }
 
-import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+removed {
+  from = azurerm_key_vault_secret.compat_web_pubsub_primary_connection_string
 
-  to = azurerm_key_vault_secret.compat_web_pubsub_primary_connection_string
-  id = data.azurerm_key_vault_secret.existing_compat_web_pubsub_primary_connection_string[0].id
+  lifecycle {
+    destroy = false
+  }
 }
 
 variable "user_ids" {

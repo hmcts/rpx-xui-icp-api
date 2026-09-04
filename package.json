@@ -80,6 +80,7 @@
     "@types/require-directory": "^2.1.1",
     "@types/sinon": "^17.0.0",
     "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^7.12.0",
     "@typescript-eslint/parser": "^8.6.0",
     "chai": "^4.3.10",
@@ -91,7 +92,8 @@
     "nyc": "^17.0.0",
     "odhin-reports-playwright": "patch:odhin-reports-playwright@npm%3A1.1.8#~/.yarn/patches/odhin-reports-playwright-npm-1.1.8-a445ed88b7.patch",
     "sinon": "^19.0.2",
-    "sonar-scanner": "^3.1.0"
+    "sonar-scanner": "^3.1.0",
+    "ws": "^8.21.1"
   },
   "nyc": {
     "extension": [
