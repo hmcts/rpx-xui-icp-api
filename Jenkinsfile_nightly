@@ -41,7 +41,7 @@ def publishPlaywrightFunctional = { String reportName ->
   steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
 }
 
-env.TEST_URL = "https://xui-icp-api-staging.aat.platform.hmcts.net"
+env.TEST_URL = "https://xui-icp.aat.platform.hmcts.net"
 env.IDAM_API_BASE_URL = "https://idam-api.aat.platform.hmcts.net"
 env.IDAM_WEBSHOW_WHITELIST = 'https://em-show-aat.service.core-compute-aat.internal/oauth2/callback'
 env.REDIS_HOST = "xui-icp-api-redis-cache-aat.redis.cache.windows.net"
