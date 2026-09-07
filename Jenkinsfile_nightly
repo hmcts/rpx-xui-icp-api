@@ -64,10 +64,10 @@ withNightlyPipeline(type, product, component) {
   loadVaultSecrets(secrets)
   enableFullFunctionalTest(200)
 
-  before('fullFunctionalTest:aat') {
+  before('fullFunctionalTest') {
     configurePlaywrightFunctional('aat')
   }
-  afterAlways('fullFunctionalTest:aat') {
+  afterAlways('fullFunctionalTest') {
     publishPlaywrightFunctional('Nightly XUI ICP API Functional Test')
   }
 }
