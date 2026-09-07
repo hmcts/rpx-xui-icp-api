@@ -10,6 +10,7 @@ describe("XUI ICP chart Redis contract", () => {
 
     expect(cnp).to.include('def component = "icp-api"');
     expect(nightly).to.include('def component = "icp-api"');
+    expect(nightly).to.include('env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"');
     expect(nightly).to.include('env.REDIS_HOST = "xui-icp-api-redis-cache-aat.redis.cache.windows.net"');
     expect(values).to.include("REDIS_HOST: xui-icp-api-redis-cache-{{ .Values.global.environment }}.redis.cache.windows.net");
   });
