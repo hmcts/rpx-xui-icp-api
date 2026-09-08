@@ -63,6 +63,15 @@ async function getSession(api: APIRequestContext, caseId: string, documentId: st
   });
 }
 
+async function getWebPubSubSession(api: APIRequestContext, email: string, caseId: string, documentId: string) {
+  const token = await requestUserToken(email);
+  const response = await getSession(api, caseId, documentId, token);
+  return {
+    response,
+    accessToken: response.headers()["x-access-token"],
+  };
+}
+
 test.describe("ICP API functional contracts", () => {
   test("reports a healthy API and Redis dependency", async ({ request }) => {
     const response = await request.get("/health");
@@ -153,6 +162,27 @@ test.describe("ICP API functional contracts", () => {
     });
   });
 
+  test("rejects an AAT Web PubSub connection from an unapproved origin", async ({ request }) => {
+    test.skip(process.env.TEST_TYPE !== "aat", "AAT Web PubSub origin validation requires the protected AAT environment");
+
+    const caseId = `playwright-case-${Date.now()}`;
+    const documentId = `playwright-document-${Date.now()}`;
+    const clientA = await getWebPubSubSession(request, functionalUserEmail.replace("@", "-client-a@"), caseId, documentId);
+
+    expect(clientA.response.status()).toBe(200);
+    expect(clientA.accessToken).toBeTruthy();
+    const clientASession = await clientA.response.json();
+
+    await expect(openWebPubSubClient({
+      connectionUrl: clientASession.session.connectionUrl,
+      accessToken: clientA.accessToken,
+      sessionId: clientASession.session.sessionId,
+      caseId,
+      documentId,
+      origin: "https://example.com",
+    })).rejects.toMatchObject({ statusCode: 401 });
+  });
+
   test("proves AAT Web PubSub collaboration between two authenticated users", async ({ request }) => {
     test.skip(process.env.TEST_TYPE !== "aat", "AAT Web PubSub collaboration requires the protected AAT environment");
 
@@ -166,31 +196,20 @@ test.describe("ICP API functional contracts", () => {
     const clientBEmail = functionalUserEmail.replace("@", "-client-b@");
     const caseId = `playwright-case-${Date.now()}`;
     const documentId = `playwright-document-${Date.now()}`;
-    const clientAToken = await requestUserToken(clientAEmail);
-    const clientBToken = await requestUserToken(clientBEmail);
-    const clientASessionResponse = await getSession(request, caseId, documentId, clientAToken);
-    const clientBSessionResponse = await getSession(request, caseId, documentId, clientBToken);
+    const clientA = await getWebPubSubSession(request, clientAEmail, caseId, documentId);
+    const clientB = await getWebPubSubSession(request, clientBEmail, caseId, documentId);
 
-    expect(clientASessionResponse.status()).toBe(200);
-    expect(clientBSessionResponse.status()).toBe(200);
-    const clientASession = await clientASessionResponse.json();
-    const clientBSession = await clientBSessionResponse.json();
-    const clientAAccessToken = clientASessionResponse.headers()["x-access-token"];
-    const clientBAccessToken = clientBSessionResponse.headers()["x-access-token"];
+    expect(clientA.response.status()).toBe(200);
+    expect(clientB.response.status()).toBe(200);
+    const clientASession = await clientA.response.json();
+    const clientBSession = await clientB.response.json();
+    const clientAAccessToken = clientA.accessToken;
+    const clientBAccessToken = clientB.accessToken;
 
     expect(new URL(clientASession.session.connectionUrl).hostname).toBe(expectedWebPubSubHost);
     expect(clientASession.session.sessionId).toBe(clientBSession.session.sessionId);
     expect(clientAAccessToken).toBeTruthy();
     expect(clientBAccessToken).toBeTruthy();
-
-    await expect(openWebPubSubClient({
-      connectionUrl: clientASession.session.connectionUrl,
-      accessToken: clientAAccessToken,
-      sessionId: clientASession.session.sessionId,
-      caseId,
-      documentId,
-      origin: "https://example.com",
-    })).rejects.toMatchObject({ statusCode: 401 });
 
     await withWebPubSubClient({
       connectionUrl: clientBSession.session.connectionUrl,
