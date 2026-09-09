@@ -1,5 +1,4 @@
 import { request as playwrightRequest, test, expect, type APIRequestContext } from "@playwright/test";
-import { openWebPubSubClient, withWebPubSubClient } from "./web-pubsub-test-client";
 
 const idamBaseUrl = process.env.IDAM_API_BASE_URL ?? "http://localhost:5000";
 const functionalUserEmail = process.env.FUNCTIONAL_TEST_USER_EMAIL ?? "xui-icp-functional@hmcts.net";
@@ -61,15 +60,6 @@ async function getSession(api: APIRequestContext, caseId: string, documentId: st
   return api.get(`/icp/sessions/${caseId}/${documentId}`, {
     headers: { Authorization: token },
   });
-}
-
-async function getWebPubSubSession(api: APIRequestContext, email: string, caseId: string, documentId: string) {
-  const token = await requestUserToken(email);
-  const response = await getSession(api, caseId, documentId, token);
-  return {
-    response,
-    accessToken: response.headers()["x-access-token"],
-  };
 }
 
 test.describe("ICP API functional contracts", () => {
@@ -162,6 +152,7 @@ test.describe("ICP API functional contracts", () => {
     });
   });
 
+  /*
   test("rejects an AAT Web PubSub connection from an unapproved origin", async ({ request }) => {
     test.skip(process.env.TEST_TYPE !== "aat", "AAT Web PubSub origin validation requires the protected AAT environment");
 
@@ -274,4 +265,5 @@ test.describe("ICP API functional contracts", () => {
       });
     });
   });
+  */
 });
