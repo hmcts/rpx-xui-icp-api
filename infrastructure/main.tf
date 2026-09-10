@@ -18,8 +18,9 @@ provider "azurerm" {
 }
 
 locals {
-  app_full_name = "${var.product}-${var.component}"
-  local_env     = var.env == "preview" ? "aat" : var.env
+  app_full_name          = "${var.product}-${var.component}"
+  local_env              = var.env == "preview" ? "aat" : var.env
+  adopt_existing_secrets = contains(["aat", "demo"], local.local_env)
   # list of the thumbprints of the SSL certificates that should be accepted by the API (gateway)
   allowed_certificate_thumbprints = [
     # API tests
@@ -86,13 +87,13 @@ resource "azurerm_key_vault_secret" "local_app_insights_key" {
 }
 
 data "azurerm_key_vault_secret" "existing_xui_app_insights_key" {
-  count        = local.local_env == "prod" ? 0 : 1
+  count        = local.adopt_existing_secrets ? 1 : 0
   name         = "xui-icp-appinsights-instrumentation-key"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+  for_each = local.adopt_existing_secrets ? toset(["import"]) : toset([])
 
   to = azurerm_key_vault_secret.local_app_insights_key
   id = data.azurerm_key_vault_secret.existing_xui_app_insights_key[0].id
@@ -162,13 +163,13 @@ resource "azurerm_key_vault_secret" "local_redis_password" {
 }
 
 data "azurerm_key_vault_secret" "existing_xui_redis_password" {
-  count        = local.local_env == "prod" ? 0 : 1
+  count        = local.adopt_existing_secrets ? 1 : 0
   name         = "xui-icp-redis-password"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+  for_each = local.adopt_existing_secrets ? toset(["import"]) : toset([])
 
   to = azurerm_key_vault_secret.local_redis_password[0]
   id = data.azurerm_key_vault_secret.existing_xui_redis_password[0].id
@@ -253,13 +254,13 @@ resource "azurerm_key_vault_secret" "xui_icp_api_web_pubsub_primary_connection_s
 }
 
 data "azurerm_key_vault_secret" "existing_xui_web_pubsub_primary_connection_string" {
-  count        = local.local_env == "prod" ? 0 : 1
+  count        = local.adopt_existing_secrets ? 1 : 0
   name         = "xui-icp-web-pubsub-primary-connection-string"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
 import {
-  for_each = var.env == "prod" ? toset([]) : toset(["import"])
+  for_each = local.adopt_existing_secrets ? toset(["import"]) : toset([])
 
   to = azurerm_key_vault_secret.xui_icp_api_web_pubsub_primary_connection_string
   id = data.azurerm_key_vault_secret.existing_xui_web_pubsub_primary_connection_string[0].id
