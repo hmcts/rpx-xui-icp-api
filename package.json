@@ -10,6 +10,7 @@
     "start:local": "NODE_ENV=local-dev ./node_modules/.bin/ts-node -r tsconfig-paths/register server.ts",
     "start:dev": "nodemon --inspect --config nodemon.json",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test:ci-evidence": "node --test test/ci-evidence.reporter.test.cjs",
     "test": "NODE_ENV=test yarn test:unit",
     "test:unit": "mocha --require ts-node/register 'test/unit/**/*.test.ts' --reporter spec --recursive --exit",
     "test:coverage": "cross-env NODE_ENV=test NODE_PATH=. nyc yarn test:unit",

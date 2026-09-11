@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, type ReporterDescription } from "@playwright/test";
 import { execSync } from "node:child_process";
 import { cpus, totalmem } from "node:os";
 
@@ -45,6 +45,19 @@ const targetEnvironment = process.env.TEST_TYPE ?? resolveEnvironment(process.en
 const reportContext = `${targetEnvironment} | ${process.env.CI ? "ci" : "local-run"} | workers=${workerCount} | agent_cpu_cores=${cpus().length} | agent_ram_gib=${Math.round((totalmem() / 1024 ** 3) * 10) / 10}`;
 
 const functionalSpecPattern = "playwright_tests/functional/**/*.spec.ts";
+const shouldEmitCiEvidence = (env: EnvMap): boolean => {
+  const configured = env.PLAYWRIGHT_CI_EVIDENCE?.trim().toLowerCase();
+  return configured ? configured === "true" : Boolean(env.CI || env.JENKINS_URL || env.BUILD_NUMBER);
+};
+
+const ciEvidenceReporters: ReporterDescription[] = shouldEmitCiEvidence(process.env)
+  ? [
+    [
+      "./playwright_tests_new/common/reporters/ci-evidence.reporter.cjs",
+      { outputFolder: odhinOutputFolder, repository: "rpx-xui-icp-api", suite: "functional" },
+    ],
+  ]
+  : [];
 
 export default defineConfig({
   testDir: ".",
@@ -87,6 +100,7 @@ export default defineConfig({
           "functional-output/tests/playwright-functional/playwright-functional-result.xml",
       },
     ],
+    ...ciEvidenceReporters,
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? process.env.TEST_URL ?? "http://localhost:8080",
