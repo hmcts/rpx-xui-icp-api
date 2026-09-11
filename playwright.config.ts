@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, type ReporterDescription } from "@playwright/test";
 import { execSync } from "node:child_process";
 import { cpus, totalmem } from "node:os";
 
@@ -45,6 +45,14 @@ const targetEnvironment = process.env.TEST_TYPE ?? resolveEnvironment(process.en
 const reportContext = `${targetEnvironment} | ${process.env.CI ? "ci" : "local-run"} | workers=${workerCount} | agent_cpu_cores=${cpus().length} | agent_ram_gib=${Math.round((totalmem() / 1024 ** 3) * 10) / 10}`;
 
 const functionalSpecPattern = "playwright_tests/functional/**/*.spec.ts";
+const nativeJsonReporter: ReporterDescription[] = process.env.CI
+  ? [
+    [
+      "json",
+      { outputFile: process.env.PLAYWRIGHT_JSON_OUTPUT ?? `${odhinOutputFolder}/ci-evidence/playwright.json` },
+    ],
+  ]
+  : [];
 
 export default defineConfig({
   testDir: ".",
@@ -87,6 +95,7 @@ export default defineConfig({
           "functional-output/tests/playwright-functional/playwright-functional-result.xml",
       },
     ],
+    ...nativeJsonReporter,
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? process.env.TEST_URL ?? "http://localhost:8080",
