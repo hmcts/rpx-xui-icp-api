@@ -45,15 +45,6 @@ const targetEnvironment = process.env.TEST_TYPE ?? resolveEnvironment(process.en
 const reportContext = `${targetEnvironment} | ${process.env.CI ? "ci" : "local-run"} | workers=${workerCount} | agent_cpu_cores=${cpus().length} | agent_ram_gib=${Math.round((totalmem() / 1024 ** 3) * 10) / 10}`;
 
 const functionalSpecPattern = "playwright_tests/functional/**/*.spec.ts";
-const nativeJsonReporter: ReporterDescription[] = process.env.CI
-  ? [
-    [
-      "json",
-      { outputFile: process.env.PLAYWRIGHT_JSON_OUTPUT ?? `${odhinOutputFolder}/ci-evidence/playwright.json` },
-    ],
-  ]
-  : [];
-
 export default defineConfig({
   testDir: ".",
   testMatch: [functionalSpecPattern],
@@ -95,7 +86,12 @@ export default defineConfig({
           "functional-output/tests/playwright-functional/playwright-functional-result.xml",
       },
     ],
-    ...nativeJsonReporter,
+    ...(process.env.CI
+      ? [[
+        "json",
+        { outputFile: process.env.PLAYWRIGHT_JSON_OUTPUT ?? `${odhinOutputFolder}/ci-evidence/playwright.json` },
+      ] as ReporterDescription]
+      : []),
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? process.env.TEST_URL ?? "http://localhost:8080",
