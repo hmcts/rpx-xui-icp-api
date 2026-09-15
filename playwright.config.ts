@@ -58,6 +58,7 @@ export default defineConfig({
   },
   outputDir: process.env.PLAYWRIGHT_TEST_OUTPUT_DIR ?? "functional-output/tests/playwright-functional/test-results",
   reporter: [
+    ...(process.env.PW_ENABLE_PERFETTO !== "false" ? [["perfetto", undefined] as ReporterDescription] : []),
     [process.env.CI ? "dot" : "list"],
     [
       "./playwright_tests_new/common/reporters/odhin-progress.reporter.cjs",
@@ -95,7 +96,7 @@ export default defineConfig({
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? process.env.TEST_URL ?? "http://localhost:8080",
-    trace: { mode: "retain-on-failure", snapshots: { dom: true, aria: true, screen: true } },
+    trace: { mode: "retain-on-failure", snapshots: true, screenshots: true, sources: true },
     screenshot: "only-on-failure",
     video: "off",
   },
