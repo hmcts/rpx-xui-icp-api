@@ -39,7 +39,7 @@ def publishPlaywrightFunctional = { String reportName ->
     reportName           : reportName
   ])
   steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
-  archiveArtifacts allowEmptyArchive: true, artifacts: 'test-results/perfetto*.json'
+  archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/tests/**/test-results/perfetto*.json'
 }
 
 env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"
