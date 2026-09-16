@@ -4,7 +4,7 @@ properties([
   pipelineTriggers([cron('H 8 * * 1-5')])
 ])
 
-@Library("Infrastructure@2.5.1")
+@Library("Infrastructure@2.8.0")
 
 def type = "nodejs"
 def product = "xui"
@@ -39,6 +39,7 @@ def publishPlaywrightFunctional = { String reportName ->
     reportName           : reportName
   ])
   steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
+  archiveArtifacts allowEmptyArchive: true, artifacts: 'test-results/perfetto*.json'
 }
 
 env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"
