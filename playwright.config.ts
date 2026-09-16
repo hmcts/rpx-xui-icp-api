@@ -60,6 +60,7 @@ export default defineConfig({
   reporter: [
     ...(process.env.PW_ENABLE_PERFETTO !== "false" ? [["perfetto", undefined] as ReporterDescription] : []),
     [process.env.CI ? "dot" : "list"],
+    ["perfetto", { outputFile: process.env.PLAYWRIGHT_PERFETTO_OUTPUT_FILE ?? "functional-output/tests/playwright-functional/test-results/perfetto.json" }],
     [
       "./playwright_tests_new/common/reporters/odhin-progress.reporter.cjs",
       { enabled: Boolean(process.env.CI), graceMs: 1_500, intervalMs: 5_000, forceExitOnCompletion: Boolean(process.env.CI) },
