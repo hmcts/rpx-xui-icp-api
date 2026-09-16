@@ -96,7 +96,7 @@ export default defineConfig({
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? process.env.TEST_URL ?? "http://localhost:8080",
-    trace: { mode: "retain-on-failure", snapshots: true, screenshots: true, sources: true },
+    trace: { mode: "retain-on-failure", snapshots: { dom: true, aria: true, screen: true }, screenshots: true, sources: true },
     screenshot: "only-on-failure",
     video: "off",
   },
