@@ -39,8 +39,8 @@ const resolveEnvironment = (env: EnvMap): string => {
 };
 
 const workerCount = 1;
-const odhinOutputFolder = process.env.PLAYWRIGHT_REPORT_FOLDER ?? "functional-output/tests/playwright-functional/odhin-report";
-const odhinIndexFilename = process.env.PLAYWRIGHT_REPORT_INDEX_FILENAME ?? "xui-playwright-functional.html";
+const odhinOutputFolder = process.env.PLAYWRIGHT_REPORT_FOLDER ?? "functional-output/tests/playwright-api/odhin-report";
+const odhinIndexFilename = process.env.PLAYWRIGHT_REPORT_INDEX_FILENAME ?? "xui-playwright-api.html";
 const targetEnvironment = process.env.TEST_TYPE ?? resolveEnvironment(process.env);
 const reportContext = `${targetEnvironment} | ${process.env.CI ? "ci" : "local-run"} | workers=${workerCount} | agent_cpu_cores=${cpus().length} | agent_ram_gib=${Math.round((totalmem() / 1024 ** 3) * 10) / 10}`;
 
@@ -56,7 +56,7 @@ export default defineConfig({
   expect: {
     timeout: 10_000,
   },
-  outputDir: process.env.PLAYWRIGHT_TEST_OUTPUT_DIR ?? "functional-output/tests/playwright-functional/test-results",
+  outputDir: process.env.PLAYWRIGHT_TEST_OUTPUT_DIR ?? "functional-output/tests/playwright-api/test-results",
   reporter: [
     ...(process.env.PW_ENABLE_PERFETTO !== "false" ? [["perfetto", undefined] as ReporterDescription] : []),
     [process.env.CI ? "dot" : "list"],
@@ -84,7 +84,7 @@ export default defineConfig({
       {
         outputFile:
           process.env.PLAYWRIGHT_JUNIT_OUTPUT ??
-          "functional-output/tests/playwright-functional/playwright-functional-result.xml",
+          "functional-output/tests/playwright-api/playwright-api-result.xml",
       },
     ],
     ...(process.env.CI
