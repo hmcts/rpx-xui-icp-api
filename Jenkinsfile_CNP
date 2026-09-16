@@ -46,6 +46,7 @@ def publishPlaywrightFunctional = { String reportName ->
     reportName           : reportName
   ])
   steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
+  archiveArtifacts allowEmptyArchive: true, artifacts: 'test-results/perfetto*.json'
 }
 
 def secrets = [
