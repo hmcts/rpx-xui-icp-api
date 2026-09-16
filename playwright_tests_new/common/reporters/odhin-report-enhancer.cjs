@@ -784,10 +784,16 @@ function enhanceGeneratedReport(outputFolder, featureStats) {
       ? fs.readdirSync(testResultsFolder).filter((name) => /^perfetto(?:[-_].*)?\.json$/i.test(name))
       : [];
     const nextHtml = enhanceDashboardHtml(currentHtml, normalizedStats, evidenceEntries);
+    const perfettoAnchors = perfettoFiles
+      .map((name) => '<a href="../test-results/' + name + '">' + name + '</a>')
+      .join(' · ');
     const perfettoLinks = perfettoFiles.length
-      ? `<p id="odhin-perfetto-link">Perfetto timelines (test names and statuses are embedded): ${perfettoFiles.map((name) => `<a href="../test-results/${name}">${name}</a>`).join(' · ')}</p>`
+      ? '<p id="odhin-perfetto-link">Perfetto timelines (test names and statuses are embedded): ' +
+        perfettoAnchors +
+        '</p>'
       : '';
-    fs.writeFileSync(filePath, perfettoLinks ? nextHtml.replace('<body>', `<body>${perfettoLinks}`) : nextHtml, 'utf8');
+    const reportHtml = perfettoLinks ? nextHtml.replace('<body>', '<body>' + perfettoLinks) : nextHtml;
+    fs.writeFileSync(filePath, reportHtml, 'utf8');
   });
 }
 
