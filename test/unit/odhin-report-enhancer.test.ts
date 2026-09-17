@@ -1,21 +1,32 @@
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { test } from 'node:test';
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
 
-import { __test__ } from '../../playwright_tests_new/common/reporters/odhin-report-enhancer.cjs';
+import { __test__ } from "../../playwright_tests_new/common/reporters/odhin-report-enhancer.cjs";
 
-test('links the suite-local Perfetto timeline from the generated Odhín report', () => {
-  const outputFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'icp-odhin-'));
-  const testResultsFolder = path.join(outputFolder, '..', 'test-results');
+test("links the suite-local Perfetto timeline from the generated Odhín report", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "icp-odhin-"));
+  const outputFolder = path.join(root, "odhin-report");
+  const testResultsFolder = path.join(root, "test-results");
+  fs.mkdirSync(outputFolder, { recursive: true });
   fs.mkdirSync(testResultsFolder, { recursive: true });
-  fs.writeFileSync(path.join(outputFolder, 'index.html'), '<html><body><div class="tab"><button class="main-tablinks">Tests</button></div><main>Results</main></body></html>');
-  fs.writeFileSync(path.join(testResultsFolder, 'perfetto.json'), '{}');
+  fs.writeFileSync(path.join(outputFolder, "index.html"), "<html><body><div class=\"tab\"><button class=\"main-tablinks\">Tests</button></div><main>Results</main></body></html>");
+  fs.writeFileSync(path.join(testResultsFolder, "perfetto.json"), "{}");
 
-  __test__.enhanceGeneratedReport(outputFolder, []);
+  const buildUrl = process.env.BUILD_URL;
+  delete process.env.BUILD_URL;
+  let report = "";
+  try {
+    __test__.enhanceGeneratedReport(outputFolder, []);
+    report = fs.readFileSync(path.join(outputFolder, "index.html"), "utf8");
+  } finally {
+    if (buildUrl === undefined) delete process.env.BUILD_URL;
+    else process.env.BUILD_URL = buildUrl;
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 
-  const report = fs.readFileSync(path.join(outputFolder, 'index.html'), 'utf8');
   assert.match(report, /class="main-tablinks" onclick="openMainTab\(event, 'TabPerfetto'\)">Perfetto Results/);
   assert.match(report, /id="TabPerfetto" style="display: none" class="main-tabcontent"/);
   assert.match(report, /href="\.\.\/test-results\/perfetto\.json"/);
