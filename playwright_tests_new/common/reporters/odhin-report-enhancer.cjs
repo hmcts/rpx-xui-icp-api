@@ -702,7 +702,7 @@ function defaultTestListRowsPerPage(html) {
     );
 }
 
-function injectPerfettoResultsTab(root, perfettoFiles) {
+function injectPerfettoResultsTab(root, perfettoFiles, perfettoHrefPrefix = '../test-results') {
   const body = root.querySelector('body');
   const tab = root.querySelector('.tab');
   if (!body || !tab || !perfettoFiles.length || root.querySelector('#TabPerfetto')) {
@@ -710,13 +710,13 @@ function injectPerfettoResultsTab(root, perfettoFiles) {
   }
 
   const links = perfettoFiles
-    .map((fileName) => `<li><a href="../test-results/${escapeAttribute(fileName)}">${escapeHtml(fileName)}</a></li>`)
+    .map((fileName) => `<li><a href="${perfettoHrefPrefix}/${escapeAttribute(fileName)}">${escapeHtml(fileName)}</a></li>`)
     .join('');
   tab.insertAdjacentHTML('beforeend', `<button class="main-tablinks" onclick="openMainTab(event, 'TabPerfetto')">Perfetto Results</button>`);
   body.insertAdjacentHTML('beforeend', `<div id="TabPerfetto" style="display: none" class="main-tabcontent"><div class="container-fluid text-center mt-3 mb-5"><div class="row ms-3 me-3"><div class="col-12"><div class="mt-3 mb-3 odhin-thin-border dashboard-block"><div class="info-box-header">Perfetto Results</div><p class="text-secondary-emphasis small mb-3 ps-4">Open the suite-local timeline to inspect test names, statuses, workers and durations.</p><ul>${links}</ul></div></div></div></div></div>`);
 }
 
-function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfettoFiles = []) {
+function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfettoFiles = [], perfettoHrefPrefix = '../test-results') {
   const htmlWithDefaultTestRows = defaultTestListRowsPerPage(html);
   const normalizedStats = normalizeFeatureStats(featureStats);
   const normalizedEvidenceEntries = normalizeEvidenceEntries(evidenceEntries);
@@ -741,7 +741,7 @@ function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfetto
   injectAccessibilityIssueSummary(root, normalizedEvidenceEntries);
   injectAccessibilityIssueFilters(root, normalizedEvidenceEntries);
   injectAccessibilityIssueColumns(root, normalizedEvidenceEntries);
-  injectPerfettoResultsTab(root, perfettoFiles);
+  injectPerfettoResultsTab(root, perfettoFiles, perfettoHrefPrefix);
 
   return root.toString();
 }
@@ -789,6 +789,10 @@ function enhanceGeneratedReport(outputFolder, featureStats) {
   const perfettoFiles = fs.existsSync(testResultsFolder)
     ? fs.readdirSync(testResultsFolder).filter((name) => /^perfetto(?:[-_].*)?\.json$/i.test(name))
     : [];
+  const artifactBaseUrl = (process.env.PLAYWRIGHT_PERFETTO_ARTIFACT_BASE_URL || process.env.BUILD_URL)?.trim().replace(/\/$/, '');
+  const perfettoHrefPrefix = artifactBaseUrl
+    ? `${artifactBaseUrl}/artifact/${path.relative(process.cwd(), testResultsFolder).split(path.sep).join('/')}`
+    : '../test-results';
   if (!normalizedStats.length && !normalizeEvidenceEntries(evidenceEntries).length && !perfettoFiles.length) {
     return;
   }
@@ -798,7 +802,7 @@ function enhanceGeneratedReport(outputFolder, featureStats) {
   reportFiles.forEach((fileName) => {
     const filePath = path.join(outputFolder, fileName);
     const currentHtml = fs.readFileSync(filePath, 'utf8');
-    const nextHtml = enhanceDashboardHtml(currentHtml, normalizedStats, evidenceEntries, perfettoFiles);
+    const nextHtml = enhanceDashboardHtml(currentHtml, normalizedStats, evidenceEntries, perfettoFiles, perfettoHrefPrefix);
     fs.writeFileSync(filePath, nextHtml, 'utf8');
   });
 }
