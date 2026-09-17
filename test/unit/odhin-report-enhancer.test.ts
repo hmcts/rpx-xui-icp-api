@@ -10,13 +10,13 @@ test('links the suite-local Perfetto timeline from the generated Odhín report',
   const outputFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'icp-odhin-'));
   const testResultsFolder = path.join(outputFolder, '..', 'test-results');
   fs.mkdirSync(testResultsFolder, { recursive: true });
-  fs.writeFileSync(path.join(outputFolder, 'index.html'), '<html><body><main>Results</main></body></html>');
+  fs.writeFileSync(path.join(outputFolder, 'index.html'), '<html><body><div class="tab"><button class="main-tablinks">Tests</button></div><main>Results</main></body></html>');
   fs.writeFileSync(path.join(testResultsFolder, 'perfetto.json'), '{}');
 
   __test__.enhanceGeneratedReport(outputFolder, []);
 
   const report = fs.readFileSync(path.join(outputFolder, 'index.html'), 'utf8');
-  assert.match(report, /id="odhin-perfetto-tab"[^>]*>Perfetto Results/);
-  assert.match(report, /id="odhin-perfetto-panel"/);
+  assert.match(report, /class="main-tablinks" onclick="openMainTab\(event, 'TabPerfetto'\)">Perfetto Results/);
+  assert.match(report, /id="TabPerfetto" style="display: none" class="main-tabcontent"/);
   assert.match(report, /href="\.\.\/test-results\/perfetto\.json"/);
 });

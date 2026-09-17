@@ -704,24 +704,16 @@ function defaultTestListRowsPerPage(html) {
 
 function injectPerfettoResultsTab(root, perfettoFiles) {
   const body = root.querySelector('body');
-  if (!body || !perfettoFiles.length || root.querySelector('#odhin-perfetto-tab')) {
+  const tab = root.querySelector('.tab');
+  if (!body || !tab || !perfettoFiles.length || root.querySelector('#TabPerfetto')) {
     return;
   }
 
   const links = perfettoFiles
     .map((fileName) => `<li><a href="../test-results/${escapeAttribute(fileName)}">${escapeHtml(fileName)}</a></li>`)
     .join('');
-  body.insertAdjacentHTML(
-    'afterbegin',
-    `<div id="odhin-perfetto-results" class="odhin-results-tab">
-      <button id="odhin-perfetto-tab" type="button" role="tab" aria-controls="odhin-perfetto-panel" aria-selected="true">Perfetto Results</button>
-      <section id="odhin-perfetto-panel" role="tabpanel" aria-labelledby="odhin-perfetto-tab">
-        <h2>Perfetto Results</h2>
-        <p>Open the suite-local timeline to inspect test names, statuses, workers and durations.</p>
-        <ul>${links}</ul>
-      </section>
-    </div>`
-  );
+  tab.insertAdjacentHTML('beforeend', `<button class="main-tablinks" onclick="openMainTab(event, 'TabPerfetto')">Perfetto Results</button>`);
+  body.insertAdjacentHTML('beforeend', `<div id="TabPerfetto" style="display: none" class="main-tabcontent"><div class="container-fluid text-center mt-3 mb-5"><div class="row ms-3 me-3"><div class="col-12"><div class="mt-3 mb-3 odhin-thin-border dashboard-block"><div class="info-box-header">Perfetto Results</div><p class="text-secondary-emphasis small mb-3 ps-4">Open the suite-local timeline to inspect test names, statuses, workers and durations.</p><ul>${links}</ul></div></div></div></div></div>`);
 }
 
 function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfettoFiles = []) {
