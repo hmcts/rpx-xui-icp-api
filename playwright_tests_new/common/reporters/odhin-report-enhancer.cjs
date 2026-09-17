@@ -702,12 +702,12 @@ function defaultTestListRowsPerPage(html) {
     );
 }
 
-function enhanceDashboardHtml(html, featureStats, evidenceEntries = []) {
+function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfettoFiles = []) {
   const htmlWithDefaultTestRows = defaultTestListRowsPerPage(html);
   const normalizedStats = normalizeFeatureStats(featureStats);
   const normalizedEvidenceEntries = normalizeEvidenceEntries(evidenceEntries);
   const hasDashboardAccessibilityEvidence = htmlWithDefaultTestRows.includes('id="odhin-accessibility-evidence"');
-  if (!normalizedStats.length && !normalizedEvidenceEntries.length && !hasDashboardAccessibilityEvidence) {
+  if (!normalizedStats.length && !normalizedEvidenceEntries.length && !hasDashboardAccessibilityEvidence && !perfettoFiles.length) {
     return htmlWithDefaultTestRows;
   }
 
@@ -727,6 +727,15 @@ function enhanceDashboardHtml(html, featureStats, evidenceEntries = []) {
   injectAccessibilityIssueSummary(root, normalizedEvidenceEntries);
   injectAccessibilityIssueFilters(root, normalizedEvidenceEntries);
   injectAccessibilityIssueColumns(root, normalizedEvidenceEntries);
+  if (perfettoFiles.length && !root.querySelector('#odhin-perfetto-link')) {
+    const links = perfettoFiles
+      .map((fileName) => `<a href="../test-results/${escapeAttribute(fileName)}">${escapeHtml(fileName)}</a>`)
+      .join(' · ');
+    root.querySelector('body')?.insertAdjacentHTML(
+      'afterbegin',
+      `<p id="odhin-perfetto-link">Perfetto timelines (test names and statuses are embedded): ${links}</p>`
+    );
+  }
 
   return root.toString();
 }
@@ -770,7 +779,11 @@ function enhanceGeneratedReport(outputFolder, featureStats) {
 
   const normalizedStats = normalizeFeatureStats(featureStats);
   const evidenceEntries = readAccessibilityEvidenceEntries(outputFolder);
-  if (!normalizedStats.length && !normalizeEvidenceEntries(evidenceEntries).length) {
+  const testResultsFolder = path.join(outputFolder, '..', 'test-results');
+  const perfettoFiles = fs.existsSync(testResultsFolder)
+    ? fs.readdirSync(testResultsFolder).filter((name) => /^perfetto(?:[-_].*)?\.json$/i.test(name))
+    : [];
+  if (!normalizedStats.length && !normalizeEvidenceEntries(evidenceEntries).length && !perfettoFiles.length) {
     return;
   }
 
@@ -779,21 +792,8 @@ function enhanceGeneratedReport(outputFolder, featureStats) {
   reportFiles.forEach((fileName) => {
     const filePath = path.join(outputFolder, fileName);
     const currentHtml = fs.readFileSync(filePath, 'utf8');
-    const testResultsFolder = path.join(outputFolder, '..', 'test-results');
-    const perfettoFiles = fs.existsSync(testResultsFolder)
-      ? fs.readdirSync(testResultsFolder).filter((name) => /^perfetto(?:[-_].*)?\.json$/i.test(name))
-      : [];
-    const nextHtml = enhanceDashboardHtml(currentHtml, normalizedStats, evidenceEntries);
-    const perfettoAnchors = perfettoFiles
-      .map((name) => '<a href="../test-results/' + name + '">' + name + '</a>')
-      .join(' · ');
-    const perfettoLinks = perfettoFiles.length
-      ? '<p id="odhin-perfetto-link">Perfetto timelines (test names and statuses are embedded): ' +
-        perfettoAnchors +
-        '</p>'
-      : '';
-    const reportHtml = perfettoLinks ? nextHtml.replace('<body>', '<body>' + perfettoLinks) : nextHtml;
-    fs.writeFileSync(filePath, reportHtml, 'utf8');
+    const nextHtml = enhanceDashboardHtml(currentHtml, normalizedStats, evidenceEntries, perfettoFiles);
+    fs.writeFileSync(filePath, nextHtml, 'utf8');
   });
 }
 
@@ -813,6 +813,7 @@ module.exports = {
     defaultTestListRowsPerPage,
     deriveFeatureName,
     enhanceDashboardHtml,
+    enhanceGeneratedReport,
     formatDuration,
     normalizeEvidenceEntries,
     readAccessibilityEvidenceEntries,
