@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { test } from "node:test";
 
-import { __test__ } from "../../playwright_tests_new/common/reporters/odhin-report-enhancer.cjs";
+const commonJsRequire = createRequire(`${process.cwd()}/test/unit/odhin-report-enhancer.test.ts`);
+const { __test__ } = commonJsRequire("../../playwright_tests_new/common/reporters/odhin-report-enhancer.cjs");
 
 test("links the suite-local Perfetto timeline from the generated Odhín report", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "icp-odhin-"));
