@@ -16,6 +16,7 @@ test('links the suite-local Perfetto timeline from the generated Odhín report',
   __test__.enhanceGeneratedReport(outputFolder, []);
 
   const report = fs.readFileSync(path.join(outputFolder, 'index.html'), 'utf8');
-  assert.match(report, /id="odhin-perfetto-link"/);
+  assert.match(report, /id="odhin-perfetto-tab"[^>]*>Perfetto Results/);
+  assert.match(report, /id="odhin-perfetto-panel"/);
   assert.match(report, /href="\.\.\/test-results\/perfetto\.json"/);
 });

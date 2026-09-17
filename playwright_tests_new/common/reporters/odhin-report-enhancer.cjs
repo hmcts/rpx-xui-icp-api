@@ -702,6 +702,28 @@ function defaultTestListRowsPerPage(html) {
     );
 }
 
+function injectPerfettoResultsTab(root, perfettoFiles) {
+  const body = root.querySelector('body');
+  if (!body || !perfettoFiles.length || root.querySelector('#odhin-perfetto-tab')) {
+    return;
+  }
+
+  const links = perfettoFiles
+    .map((fileName) => `<li><a href="../test-results/${escapeAttribute(fileName)}">${escapeHtml(fileName)}</a></li>`)
+    .join('');
+  body.insertAdjacentHTML(
+    'afterbegin',
+    `<div id="odhin-perfetto-results" class="odhin-results-tab">
+      <button id="odhin-perfetto-tab" type="button" role="tab" aria-controls="odhin-perfetto-panel" aria-selected="true">Perfetto Results</button>
+      <section id="odhin-perfetto-panel" role="tabpanel" aria-labelledby="odhin-perfetto-tab">
+        <h2>Perfetto Results</h2>
+        <p>Open the suite-local timeline to inspect test names, statuses, workers and durations.</p>
+        <ul>${links}</ul>
+      </section>
+    </div>`
+  );
+}
+
 function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfettoFiles = []) {
   const htmlWithDefaultTestRows = defaultTestListRowsPerPage(html);
   const normalizedStats = normalizeFeatureStats(featureStats);
@@ -727,15 +749,7 @@ function enhanceDashboardHtml(html, featureStats, evidenceEntries = [], perfetto
   injectAccessibilityIssueSummary(root, normalizedEvidenceEntries);
   injectAccessibilityIssueFilters(root, normalizedEvidenceEntries);
   injectAccessibilityIssueColumns(root, normalizedEvidenceEntries);
-  if (perfettoFiles.length && !root.querySelector('#odhin-perfetto-link')) {
-    const links = perfettoFiles
-      .map((fileName) => `<a href="../test-results/${escapeAttribute(fileName)}">${escapeHtml(fileName)}</a>`)
-      .join(' · ');
-    root.querySelector('body')?.insertAdjacentHTML(
-      'afterbegin',
-      `<p id="odhin-perfetto-link">Perfetto timelines (test names and statuses are embedded): ${links}</p>`
-    );
-  }
+  injectPerfettoResultsTab(root, perfettoFiles);
 
   return root.toString();
 }
