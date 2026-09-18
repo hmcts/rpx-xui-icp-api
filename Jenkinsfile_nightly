@@ -39,7 +39,7 @@ def publishPlaywrightFunctional = { String reportName ->
     reportFiles          : playwrightFunctionalReportFile,
     reportName           : reportName
   ])
-  steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
+  steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**", excludes: '**/test-results/**/trace.zip,**/test-results/**/*.png,**/test-results/**/*.jpg,**/test-results/**/*.jpeg')
 }
 
 env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"
