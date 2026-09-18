@@ -23,9 +23,10 @@ def playwrightFunctionalReportFile = 'xui-playwright-api.html'
 def configurePlaywrightFunctional = { String targetEnvironment ->
   env.PLAYWRIGHT_TEST_OUTPUT_DIR = "${playwrightFunctionalOutputRoot}/test-results"
   env.PLAYWRIGHT_JUNIT_OUTPUT = "${playwrightFunctionalOutputRoot}/playwright-api-result.xml"
+  env.PLAYWRIGHT_PERFETTO_OUTPUT_FILE = "${playwrightFunctionalOutputRoot}/test-results/perfetto.json"
   env.PLAYWRIGHT_REPORT_FOLDER = "${playwrightFunctionalOutputRoot}/odhin-report"
   env.PLAYWRIGHT_REPORT_INDEX_FILENAME = playwrightFunctionalReportFile
-  env.PLAYWRIGHT_REPORT_TITLE = "RPX XUI ICP API Playwright Functional (${targetEnvironment})"
+  env.PLAYWRIGHT_REPORT_TITLE = "RPX XUI ICP API Playwright API (${targetEnvironment})"
   env.TEST_TYPE = targetEnvironment
   env.FUNCTIONAL_TEST_ALLOWED_ORIGIN = targetEnvironment == 'prod' ?
     'https://manage-case.platform.hmcts.net' :
@@ -46,7 +47,6 @@ def publishPlaywrightFunctional = { String reportName ->
     reportName           : reportName
   ])
   steps.archiveArtifacts(allowEmptyArchive: true, artifacts: "${playwrightFunctionalOutputRoot}/**")
-  archiveArtifacts allowEmptyArchive: true, artifacts: 'functional-output/tests/**/test-results/perfetto*.json'
 }
 
 def secrets = [

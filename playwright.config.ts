@@ -58,7 +58,9 @@ export default defineConfig({
   },
   outputDir: process.env.PLAYWRIGHT_TEST_OUTPUT_DIR ?? "functional-output/tests/playwright-api/test-results",
   reporter: [
-    ...(process.env.PW_ENABLE_PERFETTO !== "false" ? [["perfetto", undefined] as ReporterDescription] : []),
+    ...(process.env.PW_ENABLE_PERFETTO !== "false"
+      ? [["perfetto", { outputFile: process.env.PLAYWRIGHT_PERFETTO_OUTPUT_FILE ?? "functional-output/tests/playwright-api/test-results/perfetto.json" }] as ReporterDescription]
+      : []),
     [process.env.CI ? "dot" : "list"],
     [
       "./playwright_tests_new/common/reporters/odhin-progress.reporter.cjs",
