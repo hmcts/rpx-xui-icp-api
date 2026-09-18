@@ -7,6 +7,7 @@ import { test } from "node:test";
 
 const commonJsRequire = createRequire(`${process.cwd()}/test/unit/odhin-report-enhancer.test.ts`);
 const { __test__ } = commonJsRequire("../../playwright_tests_new/common/reporters/odhin-report-enhancer.cjs");
+const OdhinAdaptiveReporter = commonJsRequire("../../playwright_tests_new/common/reporters/odhin-adaptive.reporter.cjs");
 
 test("links the suite-local Perfetto timeline from the generated Odhín report", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "icp-odhin-"));
@@ -36,4 +37,17 @@ test("links the suite-local Perfetto timeline from the generated Odhín report",
   assert.match(report, /class="main-tablinks" onclick="openMainTab\(event, 'TabPerfetto'\)">Perfetto Results/);
   assert.match(report, /id="TabPerfetto" style="display: none" class="main-tabcontent"/);
   assert.match(report, /href="\.\.\/test-results\/perfetto\.json"/);
+});
+
+test("always keeps Odhín attachments external", () => {
+  let receivedOptions: Record<string, unknown> | undefined;
+  new OdhinAdaptiveReporter({
+    embedAttachments: true,
+    createInnerReporter: (options: Record<string, unknown>) => {
+      receivedOptions = options;
+      return {};
+    },
+  });
+
+  assert.equal(receivedOptions?.embedAttachments, false);
 });
