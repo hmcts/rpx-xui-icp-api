@@ -47,6 +47,7 @@
     "uuid": "^11.0.0"
   },
   "resolutions": {
+    "moment": "^2.31.0",
     "xmlhttprequest-ssl": "^2.0.0",
     "lodash": "^4.18.1",
     "y18n": "^5.0.5",
