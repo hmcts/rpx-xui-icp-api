@@ -29,6 +29,22 @@ $ yarn test
 To view our REST API go to {HOST}:{PORT}/swagger
 > http://localhost:8080/swagger
 
+## Redis
+
+Deployed environments use the `xui-icp-managed-redis-connection-string` secret
+from the shared RPX Key Vault. Terraform already provisions this secret with a
+`rediss://` URL containing the managed Redis hostname, port and access key.
+For an environment without mounted secrets, set `REDIS_CONNECTION_STRING` to
+the same URL format. Treat this value as a password.
+
+Local development and preview deployments use `REDIS_HOST` and `REDIS_PORT`
+(defaulting to `localhost:6379`). Preview deployments omit the managed Redis
+secret so they use their own Redis instance.
+
+Switching caches starts with an empty session store. Existing presentation
+sessions must be recreated after deployment. The legacy cache remains
+provisioned during the transition.
+
 ## Tech
 
 The ICP API uses the following technologies:

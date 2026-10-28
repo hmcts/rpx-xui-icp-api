@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { readFileSync } from "fs";
+import yaml from "js-yaml";
 import { join } from "path";
 
 describe("XUI ICP chart Redis contract", () => {
@@ -11,8 +12,24 @@ describe("XUI ICP chart Redis contract", () => {
     expect(cnp).to.include('def component = "icp-api"');
     expect(nightly).to.include('def component = "icp-api"');
     expect(nightly).to.include('env.TEST_URL = "http://xui-icp-aat.service.core-compute-aat.internal"');
-    expect(nightly).to.include('env.REDIS_HOST = "xui-icp-api-redis-cache-aat.redis.cache.windows.net"');
-    expect(values).to.include("REDIS_HOST: xui-icp-api-redis-cache-{{ .Values.global.environment }}.redis.cache.windows.net");
+    expect(nightly).not.to.include("redis.cache.windows.net");
+    expect(values).to.include("- xui-icp-managed-redis-connection-string");
+    expect(values).not.to.include("- xui-icp-redis-password");
+    expect(values).not.to.include("redis.cache.windows.net");
+  });
+
+  it("keeps preview Redis isolated from the managed cache", () => {
+    const values = yaml.load(readFileSync(join(process.cwd(), "charts/xui-icp-api/values.yaml"), "utf8"));
+    const preview = yaml.load(readFileSync(join(process.cwd(), "charts/xui-icp-api/values.preview.template.yaml"), "utf8"));
+    const environmentVariables = yaml.load(readFileSync(join(process.cwd(), "config/custom-environment-variables.yaml"), "utf8"));
+
+    // Helm replaces the base secret list with the preview list.
+    expect(preview.nodejs.keyVaults.rpx.secrets).not.to.include("xui-icp-managed-redis-connection-string");
+    expect(preview.nodejs.keyVaults.rpx.secrets).to.include("xui-icp-web-pubsub-primary-connection-string");
+    expect(preview.nodejs.environment.REDIS_HOST).to.equal("${SERVICE_NAME}-redis-master");
+    expect(preview.nodejs.environment.REDIS_PORT).to.equal(6379);
+    expect(values.nodejs.environment.REDIS_HOST).to.be.undefined;
+    expect(environmentVariables.secrets.rpx["xui-icp-managed-redis-connection-string"]).to.equal("REDIS_CONNECTION_STRING");
   });
 
   it("keeps the Terraform component identity aligned", () => {
