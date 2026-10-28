@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { readFileSync } from "fs";
+import yaml from "js-yaml";
 import { join } from "path";
 
 describe("XUI ICP chart Redis contract", () => {
@@ -18,7 +19,6 @@ describe("XUI ICP chart Redis contract", () => {
   });
 
   it("keeps preview Redis isolated from the managed cache", () => {
-    const yaml = require("js-yaml");
     const values = yaml.load(readFileSync(join(process.cwd(), "charts/xui-icp-api/values.yaml"), "utf8"));
     const preview = yaml.load(readFileSync(join(process.cwd(), "charts/xui-icp-api/values.preview.template.yaml"), "utf8"));
     const environmentVariables = yaml.load(readFileSync(join(process.cwd(), "config/custom-environment-variables.yaml"), "utf8"));
