@@ -123,43 +123,21 @@ data "azurerm_subnet" "cft_infra_web_pub_sub_subnet" {
   provider             = azurerm.webpubsub_vnet_provider
 }
 
-# The production cache was created before this Terraform state was introduced.
-# Adopt it into the module state instead of attempting to create a duplicate.
-data "azurerm_redis_cache" "existing_xui_icp_redis_cache" {
-  count               = var.env == "prod" ? 1 : 0
-  name                = "${local.app_full_name}-redis-cache-${var.env}"
-  resource_group_name = "${local.app_full_name}-redis-cache-cache-${var.env}"
+# Retire legacy Redis from state without deleting the existing Azure resources.
+removed {
+  from = module.xui_icp_redis_cache
+
+  lifecycle {
+    destroy = false
+  }
 }
 
-import {
-  for_each = var.env == "prod" ? toset(["import"]) : toset([])
+removed {
+  from = azurerm_key_vault_secret.local_redis_password
 
-  to = module.xui_icp_redis_cache[0].azurerm_redis_cache.redis
-  id = data.azurerm_redis_cache.existing_xui_icp_redis_cache[0].id
-}
-
-module "xui_icp_redis_cache" {
-  source                        = "git@github.com:hmcts/cnp-module-redis?ref=master"
-  product                       = "${var.product}-${var.component}-redis-cache"
-  location                      = var.location
-  env                           = var.env
-  count                         = 1
-  redis_version                 = "6"
-  subnetid                      = data.azurerm_subnet.core_infra_redis_subnet.id
-  common_tags                   = var.common_tags
-  private_endpoint_enabled      = true
-  public_network_access_enabled = true
-  business_area                 = "cft"
-  sku_name                      = var.sku_name
-  family                        = var.family
-  capacity                      = var.capacity
-}
-
-resource "azurerm_key_vault_secret" "local_redis_password" {
-  count        = 1
-  name         = "xui-icp-redis-password"
-  value        = module.xui_icp_redis_cache[0].access_key
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
+  lifecycle {
+    destroy = false
+  }
 }
 
 module "managed_redis" {
@@ -189,19 +167,6 @@ resource "azurerm_key_vault_secret" "managed_redis_connection_string" {
   name         = "xui-icp-managed-redis-connection-string"
   value        = "rediss://:${urlencode(module.managed_redis.primary_access_key)}@${module.managed_redis.hostname}:${module.managed_redis.port}"
   key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-data "azurerm_key_vault_secret" "existing_xui_redis_password" {
-  count        = local.adopt_existing_secrets ? 1 : 0
-  name         = "xui-icp-redis-password"
-  key_vault_id = data.azurerm_key_vault.shared_vault.id
-}
-
-import {
-  for_each = local.adopt_existing_secrets ? toset(["import"]) : toset([])
-
-  to = azurerm_key_vault_secret.local_redis_password[0]
-  id = data.azurerm_key_vault_secret.existing_xui_redis_password[0].id
 }
 
 removed {
