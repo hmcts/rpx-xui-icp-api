@@ -162,6 +162,35 @@ resource "azurerm_key_vault_secret" "local_redis_password" {
   key_vault_id = data.azurerm_key_vault.shared_vault.id
 }
 
+module "managed_redis" {
+  source = "git@github.com:hmcts/terraform-module-azure-managed-redis?ref=main"
+
+  product     = var.product
+  component   = var.component
+  env         = var.env
+  location    = var.location
+  common_tags = var.common_tags
+
+  sku_name = var.managed_redis_sku_name
+
+  public_network_access   = "Disabled"
+  create_private_endpoint = true
+  subnet_id               = data.azurerm_subnet.core_infra_redis_subnet.id
+  private_dns_zone_ids = [
+    "/subscriptions/${var.private_dns_subscription_id}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
+  ]
+
+  access_keys_authentication_enabled = true
+  persistence_rdb_backup_frequency   = "6h"
+  clustering_policy                  = "EnterpriseCluster"
+}
+
+resource "azurerm_key_vault_secret" "managed_redis_connection_string" {
+  name         = "xui-icp-managed-redis-connection-string"
+  value        = "rediss://:${urlencode(module.managed_redis.primary_access_key)}@${module.managed_redis.hostname}:${module.managed_redis.port}"
+  key_vault_id = data.azurerm_key_vault.shared_vault.id
+}
+
 data "azurerm_key_vault_secret" "existing_xui_redis_password" {
   count        = local.adopt_existing_secrets ? 1 : 0
   name         = "xui-icp-redis-password"

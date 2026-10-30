@@ -4,6 +4,8 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { createRequire } from "module";
 import { RouterFinder } from "../../api/router/routerFinder";
+import sinon from "sinon";
+import Redis from "ioredis";
 
 const commonJsRequire = createRequire(`${process.cwd()}/test/unit/bootstrap-options.test.ts`);
 
@@ -23,6 +25,7 @@ describe("bootstrap options", () => {
   afterEach(() => {
     config.secrets = originalSecrets;
     config.redis.useTLS = originalUseTls;
+    sinon.restore();
     delete moduleCache[redisPath];
     if (cachedRedisModule) {
       moduleCache[redisPath] = cachedRedisModule;
@@ -36,6 +39,28 @@ describe("bootstrap options", () => {
 
     expect(client.options.tls).to.equal(true);
     expect(client.options.password).to.equal("test-password");
+  });
+
+  it("uses the managed Redis URL instead of legacy host, port and password", () => {
+    config.secrets = { rpx: {
+      "xui-icp-managed-redis-connection-string": "rediss://:managed%2Bkey%2F%3D@managed.redis.azure.net:10000",
+      "xui-icp-redis-password": "legacy-password",
+    } };
+    config.redis.useTLS = "false";
+    // Use the real ioredis URL parser without opening a network connection.
+    const constructor = sinon.stub(moduleCache[commonJsRequire.resolve(config.redis.import)], "exports")
+      .callsFake((url: string) => new Redis(url, { lazyConnect: true }));
+
+    const { client } = commonJsRequire("../../api/redis");
+    try {
+      expect(constructor.calledOnceWithExactly(config.secrets.rpx["xui-icp-managed-redis-connection-string"])).to.be.true;
+      expect(client.options.host).to.equal("managed.redis.azure.net");
+      expect(Number(client.options.port)).to.equal(10000);
+      expect(client.options.password).to.equal("managed+key/=");
+      expect(client.options.tls).to.equal(true);
+    } finally {
+      client.disconnect();
+    }
   });
 
   it("uses default Redis options when TLS and secrets are absent", () => {
