@@ -5,13 +5,9 @@ const Redis = require(config.redis.import);
 propertiesVolume.addTo(config);
 
 const connectionString = config.secrets?.rpx?.["xui-icp-managed-redis-connection-string"];
-const redisOptions = config.redis.useTLS === "true" ? {
-  password: config.secrets?.rpx?.["xui-icp-redis-password"],
-  tls: true,
-} : {};
 export const client = connectionString
   ? new Redis(connectionString)
-  : new Redis(config.redis.port, config.redis.host, redisOptions);
+  : new Redis(config.redis.port, config.redis.host);
 
 client.on("ready", () => {
   console.log("Redis is ready");

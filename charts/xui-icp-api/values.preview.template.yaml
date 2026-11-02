@@ -2,7 +2,6 @@ nodejs:
   environment:
     REDIS_HOST: ${SERVICE_NAME}-redis-master
     REDIS_PORT: 6379
-    REDIS_USE_TLS: false
   keyVaults:
     rpx:
       secrets:

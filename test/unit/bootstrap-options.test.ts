@@ -14,7 +14,6 @@ describe("bootstrap options", () => {
   const redisPath = commonJsRequire.resolve("../../api/redis");
   const moduleCache = commonJsRequire("module")._cache;
   const originalSecrets = config.secrets;
-  const originalUseTls = config.redis.useTLS;
   let cachedRedisModule: NodeModule | undefined;
 
   beforeEach(() => {
@@ -24,7 +23,6 @@ describe("bootstrap options", () => {
 
   afterEach(() => {
     config.secrets = originalSecrets;
-    config.redis.useTLS = originalUseTls;
     sinon.restore();
     delete moduleCache[redisPath];
     if (cachedRedisModule) {
@@ -32,21 +30,10 @@ describe("bootstrap options", () => {
     }
   });
 
-  it("uses TLS and the configured password for Redis", () => {
-    config.secrets = { rpx: { "xui-icp-redis-password": "test-password" } };
-    config.redis.useTLS = "true";
-    const { client } = commonJsRequire("../../api/redis");
-
-    expect(client.options.tls).to.equal(true);
-    expect(client.options.password).to.equal("test-password");
-  });
-
-  it("uses the managed Redis URL instead of legacy host, port and password", () => {
+  it("uses the managed Redis URL with TLS and its encoded access key", () => {
     config.secrets = { rpx: {
       "xui-icp-managed-redis-connection-string": "rediss://:managed%2Bkey%2F%3D@managed.redis.azure.net:10000",
-      "xui-icp-redis-password": "legacy-password",
     } };
-    config.redis.useTLS = "false";
     // Use the real ioredis URL parser without opening a network connection.
     const constructor = sinon.stub(moduleCache[commonJsRequire.resolve(config.redis.import)], "exports")
       .callsFake((url: string) => new Redis(url, { lazyConnect: true }));
@@ -63,11 +50,12 @@ describe("bootstrap options", () => {
     }
   });
 
-  it("uses default Redis options when TLS and secrets are absent", () => {
+  it("uses local Redis host and port when the managed connection string is absent", () => {
     config.secrets = undefined;
-    config.redis.useTLS = "false";
     const { client } = commonJsRequire("../../api/redis");
 
+    expect(client.options.host).to.equal(config.redis.host);
+    expect(Number(client.options.port)).to.equal(Number(config.redis.port));
     expect(client.options.tls).to.be.undefined;
     expect(client.options.password).to.not.exist;
   });
