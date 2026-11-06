@@ -4,6 +4,10 @@ redis:
   password: REDIS_PASSWORD
   useTLS: REDIS_USE_TLS
 
+secrets:
+  rpx:
+    xui-icp-managed-redis-connection-string: REDIS_CONNECTION_STRING
+
 pact:
   pactBrokerUrl: PACT_BROKER_URL
 

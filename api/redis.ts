@@ -4,12 +4,14 @@ const config = require("config");
 const Redis = require(config.redis.import);
 propertiesVolume.addTo(config);
 
-const tlsOptions = {
-  password: config.secrets ? config.secrets["rpx"]["xui-icp-redis-password"] : undefined,
+const connectionString = config.secrets?.rpx?.["xui-icp-managed-redis-connection-string"];
+const redisOptions = config.redis.useTLS === "true" ? {
+  password: config.secrets?.rpx?.["xui-icp-redis-password"],
   tls: true,
-};
-const redisOptions = config.redis.useTLS === "true" ? tlsOptions : {};
-export const client = new Redis(config.redis.port, config.redis.host, redisOptions);
+} : {};
+export const client = connectionString
+  ? new Redis(connectionString)
+  : new Redis(config.redis.port, config.redis.host, redisOptions);
 
 client.on("ready", () => {
   console.log("Redis is ready");

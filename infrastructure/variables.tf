@@ -58,3 +58,15 @@ variable "private_endpoint_subscription_id" {
   description = "Subscription ID for the private endpoint"
   type        = string
 }
+
+variable "private_dns_subscription_id" {
+  type        = string
+  default     = "1baf5470-1c3e-40d3-a6f7-74bfbce4b348"
+  description = "Subscription containing the shared HMCTS private DNS zones."
+}
+
+variable "managed_redis_sku_name" {
+  type        = string
+  default     = "Balanced_B1"
+  description = "Azure Managed Redis SKU. B1 preserves the default C1 cache's 1 GB; environment overrides match larger caches."
+}
