@@ -15,7 +15,7 @@ manages In Court Presentation sessions initiated by the Media Viewer.
 Prerequisites
 -------------
 
-- Node.js 24.x or a later version accepted by package.json.
+- Node.js 24.22.2 or a later version accepted by package.json.
 - Yarn 4.18.0.
 - Docker and Docker Compose.
 - Azure CLI with access to the required HMCTS container registries and
