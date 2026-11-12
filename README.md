@@ -102,8 +102,9 @@ Local development and preview deployments use `REDIS_HOST` and `REDIS_PORT`
 secret so they use their own Redis instance.
 
 Switching caches starts with an empty session store. Existing presentation
-sessions must be recreated after deployment. The legacy cache remains
-provisioned during the transition.
+sessions must be recreated after deployment. Terraform no longer manages the
+legacy cache or its password secret; state-removal blocks preserve existing
+Azure resources without provisioning or importing them.
 
 
 API documentation and health

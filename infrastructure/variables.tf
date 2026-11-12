@@ -39,21 +39,6 @@ variable "api_gateway_test_certificate_thumbprint" {
   default = ""
 }
 
-variable "family" {
-  default     = "C"
-  description = "The SKU family/pricing group to use. Valid values are `C` (for Basic/Standard SKU family) and `P` (for Premium). Use P for higher availability, but beware it costs a lot more."
-}
-
-variable "sku_name" {
-  default     = "Basic"
-  description = "The SKU of Redis to use. Possible values are `Basic`, `Standard` and `Premium`."
-}
-
-variable "capacity" {
-  default     = "1"
-  description = "The size of the Redis cache to deploy. Valid values are 1, 2, 3, 4, 5"
-}
-
 variable "private_endpoint_subscription_id" {
   description = "Subscription ID for the private endpoint"
   type        = string
@@ -68,5 +53,5 @@ variable "private_dns_subscription_id" {
 variable "managed_redis_sku_name" {
   type        = string
   default     = "Balanced_B1"
-  description = "Azure Managed Redis SKU. B1 preserves the default C1 cache's 1 GB; environment overrides match larger caches."
+  description = "Azure Managed Redis SKU."
 }
