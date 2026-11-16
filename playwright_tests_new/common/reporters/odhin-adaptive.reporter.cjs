@@ -38,12 +38,13 @@ class OdhinAdaptiveReporter {
 
     // Keep stdout/stderr only for failed tests in default mode.
     this.testOutputMode = normalizeTestOutputMode(reporterOptions.testOutput);
-    this.profileEnabled =
-      typeof reporterOptions.profile === 'boolean'
-        ? reporterOptions.profile
-        : process.env.PW_ODHIN_PROFILE
-          ? process.env.PW_ODHIN_PROFILE.toLowerCase() === 'true'
-          : true;
+    if (typeof reporterOptions.profile === 'boolean') {
+      this.profileEnabled = reporterOptions.profile;
+    } else {
+      this.profileEnabled = process.env.PW_ODHIN_PROFILE
+        ? process.env.PW_ODHIN_PROFILE.toLowerCase() === 'true'
+        : true;
+    }
     const configuredRuntimeHookTimeoutMs = reporterOptions.runtimeHookTimeoutMs ?? process.env.PW_ODHIN_RUNTIME_HOOK_TIMEOUT_MS;
     this.runtimeHookTimeoutMs = normalizeRuntimeHookTimeoutMs(configuredRuntimeHookTimeoutMs, 15000);
     const configuredFinalizationTimeoutMs = reporterOptions.finalizationTimeoutMs ?? process.env.PW_ODHIN_FINALIZATION_TIMEOUT_MS;
