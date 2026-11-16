@@ -53,8 +53,9 @@ function buildAccessibilityEvidenceBlock(entries) {
   const cards = normalizedEntries
     .map((entry) => {
       const screenshotPath = entry.screenshotFileName ? `./accessibility-evidence/${entry.screenshotFileName}` : '';
+      const htmlPath = `./accessibility-evidence/${entry.htmlFileName}`;
       const evidenceLinks = [
-        `<a href="${escapeAttribute(`./accessibility-evidence/${entry.htmlFileName}`)}"${evidenceLinkAttributes}>${entry.engine === 'summary' ? 'open page summary' : 'issue detail'}</a>`,
+        `<a href="${escapeAttribute(htmlPath)}"${evidenceLinkAttributes}>${entry.engine === 'summary' ? 'open page summary' : 'issue detail'}</a>`,
         entry.reportFileName
           ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.reportFileName}`)}"${evidenceLinkAttributes}>native Lighthouse HTML</a>`
           : '',
