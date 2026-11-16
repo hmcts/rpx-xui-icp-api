@@ -316,8 +316,12 @@ const formatErrorMessage = (error) => {
 };
 
 const formatHookContext = ({ test } = {}) => {
-  const title =
-    typeof test?.titlePath === 'function' ? test.titlePath().join(' > ') : typeof test?.title === 'string' ? test.title : '';
+  let title = '';
+  if (typeof test?.titlePath === 'function') {
+    title = test.titlePath().join(' > ');
+  } else if (typeof test?.title === 'string') {
+    title = test.title;
+  }
   return title ? ` test="${title}"` : '';
 };
 
