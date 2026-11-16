@@ -115,7 +115,7 @@ class OdhinAdaptiveReporter {
 
     this.recordStatus(result?.status);
     this.recordFeatureStat(test, result);
-    this.enqueueInnerCallback('onTestEnd', () => this.inner.onTestEnd(test, nextResult), { test });
+    void this.enqueueInnerCallback('onTestEnd', () => this.inner.onTestEnd(test, nextResult), { test });
   }
 
   async onEnd(result) {
@@ -152,13 +152,13 @@ class OdhinAdaptiveReporter {
 
   async onStdOut(chunk, test, result) {
     if (typeof this.inner.onStdOut === 'function') {
-      this.enqueueInnerCallback('onStdOut', () => this.inner.onStdOut(chunk, test, result), { test });
+      void this.enqueueInnerCallback('onStdOut', () => this.inner.onStdOut(chunk, test, result), { test });
     }
   }
 
   async onStdErr(chunk, test, result) {
     if (typeof this.inner.onStdErr === 'function') {
-      this.enqueueInnerCallback('onStdErr', () => this.inner.onStdErr(chunk, test, result), { test });
+      void this.enqueueInnerCallback('onStdErr', () => this.inner.onStdErr(chunk, test, result), { test });
     }
   }
 
