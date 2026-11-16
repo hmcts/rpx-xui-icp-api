@@ -879,7 +879,7 @@ function normalizeFeatureStats(featureStats) {
 function colorForFeature(name) {
   let hash = 0;
   for (const char of String(name)) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    hash = (hash * 31 + char[0].codePointAt(0)) >>> 0;
   }
   const hue = hash % 360;
   return `hsl(${hue} 68% 52%)`;
