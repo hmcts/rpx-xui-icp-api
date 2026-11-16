@@ -1,6 +1,6 @@
 /* global require, module */
 
-const fs = require('fs');
+const fs = require('node:fs');
 const path = require('path');
 const { parse } = require('node-html-parser');
 
