@@ -5,7 +5,7 @@ const odhinModule = require('odhin-reports-playwright');
 const { createEmptyFeatureStat, deriveFeatureName, enhanceGeneratedReport } = require('./odhin-report-enhancer.cjs');
 
 const OdhinReporter = odhinModule.default ?? odhinModule;
-const terminalStatusesNoRetry = ['passed', 'flaky', 'skipped', 'interrupted'];
+const terminalStatusesNoRetry = new Set(['passed', 'flaky', 'skipped', 'interrupted']);
 
 class OdhinAdaptiveReporter {
   constructor(options = {}) {
@@ -281,7 +281,7 @@ const normalizeFinalStatus = (status, retry) => {
 };
 
 const isFinalResult = (status, retry, retries) =>
-  terminalStatusesNoRetry.includes(status) || Number(retry ?? 0) === Number(retries ?? 0);
+  terminalStatusesNoRetry.has(status) || Number(retry ?? 0) === Number(retries ?? 0);
 
 const withTimeout = async (promise, timeoutMs) => {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
