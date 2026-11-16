@@ -12,7 +12,7 @@ const resolveBranchName = (env: EnvMap): string => {
   }
 
   try {
-    const branch = execSync("git rev-parse --abbrev-ref HEAD", {
+    const branch = execSync("/usr/bin/git rev-parse --abbrev-ref HEAD", {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
