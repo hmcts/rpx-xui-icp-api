@@ -14,12 +14,11 @@ class OdhinAdaptiveReporter {
     this.outputFolder = reporterOptions.outputFolder;
     const configuredLightweight = reporterOptions.lightweight;
     const envLightweight = process.env.PW_ODHIN_LIGHTWEIGHT;
-    this.lightweight =
-      typeof configuredLightweight === 'boolean'
-        ? configuredLightweight
-        : envLightweight
-          ? envLightweight.toLowerCase() === 'true'
-          : !process.env.CI;
+    if (typeof configuredLightweight === 'boolean') {
+      this.lightweight = configuredLightweight;
+    } else {
+      this.lightweight = envLightweight ? envLightweight.toLowerCase() === 'true' : !process.env.CI;
+    }
 
     const normalizeTestOutputMode = (raw) => {
       if (raw === true || raw === false) {
