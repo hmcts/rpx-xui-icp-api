@@ -8,7 +8,7 @@ const evidenceLinkAttributes = ' target="_blank" rel="noopener noreferrer"';
 
 function deriveFeatureName(filePath) {
   const normalized = String(filePath ?? '')
-    .replace(/\\/g, '/')
+    .replaceAll('\\', '/')
     .trim();
 
   if (!normalized) {
