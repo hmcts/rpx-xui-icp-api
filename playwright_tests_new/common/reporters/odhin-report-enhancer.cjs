@@ -684,20 +684,20 @@ function stripLegacyFileChartArtifacts(root) {
 
 function defaultTestListRowsPerPage(html) {
   return String(html)
-    .replace(
-      /\$\("#test-list-table"\)\.DataTable\(\{pageLength:100,lengthMenu:\[10,25,50,100\]\}\)/g,
+    .replaceAll(
+      '$("#test-list-table").DataTable({pageLength:100,lengthMenu:[10,25,50,100]})',
       '$("#test-list-table").DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})'
     )
-    .replace(
-      /\$\('#test-list-table'\)\.DataTable\(\{pageLength:100,lengthMenu:\[10,25,50,100\]\}\)/g,
+    .replaceAll(
+      "$('#test-list-table').DataTable({pageLength:100,lengthMenu:[10,25,50,100]})",
       "$('#test-list-table').DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})"
     )
-    .replace(
-      /\$\("#test-list-table"\)\.DataTable\(\{\}\)/g,
+    .replaceAll(
+      '$("#test-list-table").DataTable({})',
       '$("#test-list-table").DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})'
     )
-    .replace(
-      /\$\('#test-list-table'\)\.DataTable\(\{\}\)/g,
+    .replaceAll(
+      "$('#test-list-table').DataTable({})",
       "$('#test-list-table').DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})"
     );
 }
