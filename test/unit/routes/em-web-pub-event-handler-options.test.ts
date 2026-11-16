@@ -485,10 +485,23 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     const updatePresenterStub = sinon.stub(emWebPubEventHandlerOptions, "onUpdatePresenter").resolves();
 
-    emWebPubEventHandlerOptions.checkIfConnectionIsPrenseterAndRemove(connectionId, session);
+    expect(emWebPubEventHandlerOptions.checkIfConnectionIsPrenseterAndRemove(connectionId, session)).to.be.undefined;
 
     expect(updatePresenterStub.calledOnce).to.be.true;
     expect(updatePresenterStub.calledWith({ caseId: "caseId", documentId: "documentId", presenterId: "", presenterName: "" })).to.be.true;
+    expect(session.presenterId).to.equal("");
+    expect(session.presenterName).to.equal("");
+  });
+
+  it("should report failed presenter updates after presenter removal returns void", async () => {
+    const session = { presenterId: "conn1", presenterName: "presenter", caseId: "caseId", documentId: "documentId" } as Session;
+    const error = new Error("presenter update failed");
+    sinon.stub(emWebPubEventHandlerOptions, "onUpdatePresenter").rejects(error);
+
+    expect(emWebPubEventHandlerOptions.checkIfConnectionIsPrenseterAndRemove("conn1", session)).to.be.undefined;
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
   });
 
   it("should remove an existing participant", async () => {
