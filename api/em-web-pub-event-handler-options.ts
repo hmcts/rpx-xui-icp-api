@@ -186,7 +186,7 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
   async onUpdateScreen(screen: { caseId: string, documentId: string, body: unknown }): Promise<void> {
     const sessionId = this.redisClient.getSessionId(screen.caseId, screen.documentId);
     const groupClient = this.client.group(sessionId);
-    groupClient.sendToAll({ eventName: Actions.SCREEN_UPDATED, data: screen.body });
+    await groupClient.sendToAll({ eventName: Actions.SCREEN_UPDATED, data: screen.body });
   }
 
   async onRemoveParticant(connectionId: string, caseId: string, documentId: string): Promise<void> {
