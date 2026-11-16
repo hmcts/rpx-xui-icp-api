@@ -221,7 +221,9 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     if (connectionId === session.presenterId) {
       session.presenterId = "";
       session.presenterName = "";
-      this.onUpdatePresenter({ caseId: session.caseId, documentId: session.documentId, presenterId: "", presenterName: "" } as PresenterUpdate);
+      void this.onUpdatePresenter({ caseId: session.caseId, documentId: session.documentId, presenterId: "", presenterName: "" } as PresenterUpdate).catch(error => {
+        this.appInsightClient.trackException({ exception: error });
+      });
     }
   }
   
