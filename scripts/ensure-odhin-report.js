@@ -151,7 +151,12 @@ function listInterestingFiles(directory) {
     });
   };
   visit(directory);
-  return found.sort().slice(0, 200);
+  return found
+    .sort((left, right) => {
+      if (left < right) return -1;
+      return left > right ? 1 : 0;
+    })
+    .slice(0, 200);
 }
 
 function escapeHtml(value) {
