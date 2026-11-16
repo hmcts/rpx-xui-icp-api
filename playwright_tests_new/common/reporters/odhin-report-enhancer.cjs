@@ -1,7 +1,7 @@
 /* global require, module */
 
 const fs = require('node:fs');
-const path = require('path');
+const path = require('node:path');
 const { parse } = require('node-html-parser');
 
 const evidenceLinkAttributes = ' target="_blank" rel="noopener noreferrer"';
