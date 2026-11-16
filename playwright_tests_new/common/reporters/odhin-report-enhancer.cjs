@@ -271,8 +271,9 @@ function buildTestEvidencePanel(entries, navigation = {}) {
     .join('');
   const links = normalizedEntries
     .map((entry) => {
+      const screenshotPath = `./accessibility-evidence/${entry.screenshotFileName}`;
       const screenshotLink = entry.screenshotFileName
-        ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.screenshotFileName}`)}"${evidenceLinkAttributes}>Open screenshot</a>`
+        ? `<a href="${escapeAttribute(screenshotPath)}"${evidenceLinkAttributes}>Open screenshot</a>`
         : '';
       const jsonLink = entry.jsonFileName
         ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.jsonFileName}`)}"${evidenceLinkAttributes}>Open ${escapeHtml(jsonLinkLabel(entry.engine))}</a>`
