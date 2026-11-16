@@ -387,7 +387,12 @@ function addFailureSource(test, result) {
     return result;
   }
 
-  const errors = Array.isArray(result.errors) ? result.errors : result.error ? [result.error] : [];
+  let errors = [];
+  if (Array.isArray(result.errors)) {
+    errors = result.errors;
+  } else if (result.error) {
+    errors = [result.error];
+  }
   const errorText = errors.map((error) => `${error?.message ?? ''}\n${error?.stack ?? ''}`).join('\n');
   const source = deriveFailureSource(`${test?.title ?? ''}\n${errorText}`);
   if (!source || errors.some((error) => String(error?.stack ?? error?.message ?? '').startsWith('[Failure source:'))) {
