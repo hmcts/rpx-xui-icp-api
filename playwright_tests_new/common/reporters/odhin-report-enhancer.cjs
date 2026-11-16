@@ -55,6 +55,7 @@ function buildAccessibilityEvidenceBlock(entries) {
       const screenshotPath = entry.screenshotFileName ? `./accessibility-evidence/${entry.screenshotFileName}` : '';
       const htmlPath = `./accessibility-evidence/${entry.htmlFileName}`;
       const reportPath = `./accessibility-evidence/${entry.reportFileName}`;
+      const jsonPath = `./accessibility-evidence/${entry.jsonFileName}`;
       const evidenceLinks = [
         `<a href="${escapeAttribute(htmlPath)}"${evidenceLinkAttributes}>${entry.engine === 'summary' ? 'open page summary' : 'issue detail'}</a>`,
         entry.reportFileName
@@ -62,7 +63,7 @@ function buildAccessibilityEvidenceBlock(entries) {
           : '',
         screenshotPath ? `<a href="${escapeAttribute(screenshotPath)}"${evidenceLinkAttributes}>screenshot</a>` : '',
         entry.jsonFileName
-          ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.jsonFileName}`)}"${evidenceLinkAttributes}>${jsonLinkLabel(entry.engine)}</a>`
+          ? `<a href="${escapeAttribute(jsonPath)}"${evidenceLinkAttributes}>${jsonLinkLabel(entry.engine)}</a>`
           : '',
       ]
         .filter(Boolean)
