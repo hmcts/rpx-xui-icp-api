@@ -279,8 +279,9 @@ function buildTestEvidencePanel(entries, navigation = {}) {
       const jsonLink = entry.jsonFileName
         ? `<a href="${escapeAttribute(jsonPath)}"${evidenceLinkAttributes}>Open ${escapeHtml(jsonLinkLabel(entry.engine))}</a>`
         : '';
+      const reportPath = `./accessibility-evidence/${entry.reportFileName}`;
       const nativeReportLink = entry.reportFileName
-        ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.reportFileName}`)}"${evidenceLinkAttributes}>Open native Lighthouse HTML</a>`
+        ? `<a href="${escapeAttribute(reportPath)}"${evidenceLinkAttributes}>Open native Lighthouse HTML</a>`
         : '';
 
       return `
