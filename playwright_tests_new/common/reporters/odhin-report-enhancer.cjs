@@ -24,7 +24,7 @@ function deriveFeatureName(filePath) {
   ];
 
   for (const pattern of rootedPatterns) {
-    const match = normalized.match(pattern);
+    const match = pattern.exec(normalized);
     if (match?.[1]) {
       return match[1];
     }
