@@ -176,7 +176,7 @@ function buildTestEvidenceNavigation(navigation) {
 }
 
 function buildAccessibilityModalNavigationScript() {
-  return `
+  return String.raw`
     <script id="odhin-a11y-modal-nav-script">
       (function() {
         if (window.__odhinA11yModalNavigation) {
@@ -185,7 +185,7 @@ function buildAccessibilityModalNavigationScript() {
         window.__odhinA11yModalNavigation = true;
 
         function normalize(text) {
-          return String(text || '').replace(/\\s+/g, ' ').trim();
+          return String(text || '').replace(/\s+/g, ' ').trim();
         }
 
         function rowForTitle(title) {
