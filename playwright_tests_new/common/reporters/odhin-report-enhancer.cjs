@@ -854,12 +854,14 @@ function createEmptyFeatureStat(name) {
 }
 
 function normalizeFeatureStats(featureStats) {
-  const source =
-    featureStats instanceof Map
-      ? Array.from(featureStats.values())
-      : Array.isArray(featureStats)
-        ? featureStats
-        : Object.values(featureStats ?? {});
+  let source;
+  if (featureStats instanceof Map) {
+    source = Array.from(featureStats.values());
+  } else if (Array.isArray(featureStats)) {
+    source = featureStats;
+  } else {
+    source = Object.values(featureStats ?? {});
+  }
 
   return source
     .map((entry) => ({
