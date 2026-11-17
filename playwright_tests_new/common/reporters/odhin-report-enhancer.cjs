@@ -275,8 +275,9 @@ function buildTestEvidencePanel(entries, navigation = {}) {
       const screenshotLink = entry.screenshotFileName
         ? `<a href="${escapeAttribute(screenshotPath)}"${evidenceLinkAttributes}>Open screenshot</a>`
         : '';
+      const jsonPath = `./accessibility-evidence/${entry.jsonFileName}`;
       const jsonLink = entry.jsonFileName
-        ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.jsonFileName}`)}"${evidenceLinkAttributes}>Open ${escapeHtml(jsonLinkLabel(entry.engine))}</a>`
+        ? `<a href="${escapeAttribute(jsonPath)}"${evidenceLinkAttributes}>Open ${escapeHtml(jsonLinkLabel(entry.engine))}</a>`
         : '';
       const nativeReportLink = entry.reportFileName
         ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.reportFileName}`)}"${evidenceLinkAttributes}>Open native Lighthouse HTML</a>`
