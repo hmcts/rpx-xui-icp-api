@@ -340,10 +340,10 @@ function buildIssueGroupsText(entries, globalRuleCounts) {
       const ruleText =
         rules.length > 0
           ? rules
-              .map(
-                (rule) =>
-                  `${rule}${globalRuleCounts.get(`${entry.engine}:${rule}`) ? ` (${globalRuleCounts.get(`${entry.engine}:${rule}`)})` : ''}`
-              )
+              .map((rule) => {
+                const count = globalRuleCounts.get(`${entry.engine}:${rule}`);
+                return count ? `${rule} (${count})` : rule;
+              })
               .join(', ')
           : entry.summary || 'no rule recorded';
       return `<div><strong>${escapeHtml(engineLabel(entry.engine))}:</strong> ${escapeHtml(ruleText)}</div>`;
