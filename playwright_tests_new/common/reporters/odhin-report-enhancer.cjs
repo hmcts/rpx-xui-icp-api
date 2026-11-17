@@ -1280,12 +1280,14 @@ function buildFeatureOverviewBlock(featureStats) {
   const totalTests = featureStats.reduce((sum, feature) => sum + feature.totalTests, 0);
   const topFeature = featureStats[0];
   const summaryLabel = featureStats.length > 1 ? 'Distribution' : 'Summary';
-  const layoutDensityClass =
-    featureStats.length <= 3
-      ? 'odhin-feature-overview-layout-compact'
-      : featureStats.length <= 6
-        ? 'odhin-feature-overview-layout-balanced'
-        : 'odhin-feature-overview-layout-dense';
+  let layoutDensityClass;
+  if (featureStats.length <= 3) {
+    layoutDensityClass = 'odhin-feature-overview-layout-compact';
+  } else if (featureStats.length <= 6) {
+    layoutDensityClass = 'odhin-feature-overview-layout-balanced';
+  } else {
+    layoutDensityClass = 'odhin-feature-overview-layout-dense';
+  }
   const tableViewportPx = Math.min(520, Math.max(156, 72 + featureStats.length * 40));
   const rows = featureStats
     .map((feature) => {
