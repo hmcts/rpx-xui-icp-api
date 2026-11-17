@@ -919,7 +919,7 @@ function escapeHtml(value) {
 }
 
 function escapeAttribute(value) {
-  return escapeHtml(value).replace(/`/g, '&#96;');
+  return escapeHtml(value).replaceAll('`', '&#96;');
 }
 
 function injectEnhancerStyles(root) {
