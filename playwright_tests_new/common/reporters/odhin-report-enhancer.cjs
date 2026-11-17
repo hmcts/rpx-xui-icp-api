@@ -1419,7 +1419,7 @@ function inferEvidenceEngine(entry) {
 }
 
 function engineSortOrder(engine) {
-  return ['summary', 'axe', 'wave-like', 'screen-reader', 'lighthouse'].indexOf(engine) >= 0
+  return ['summary', 'axe', 'wave-like', 'screen-reader', 'lighthouse'].includes(engine)
     ? ['summary', 'axe', 'wave-like', 'screen-reader', 'lighthouse'].indexOf(engine)
     : 99;
 }
