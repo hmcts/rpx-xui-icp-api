@@ -347,7 +347,34 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     expect(groupClientStub.addConnection.calledOnceWith("connectionId")).to.be.true;
     expect(redisClientStub.onJoin.calledOnceWith(session, { connectionId: "username" })).to.be.true;
+    expect(groupClientStub.sendToAll.args).to.deep.equal([
+      [{ eventName: Actions.PARTICIPANTS_UPDATED, data: { connectionId: "username" } }],
+      [{ eventName: Actions.NEW_PARTICIPANT_JOINED, data: null }],
+    ]);
   });
+
+  for (const eventName of [Actions.PARTICIPANTS_UPDATED, Actions.NEW_PARTICIPANT_JOINED]) {
+    it(`should report ${eventName} broadcast failures during session joins`, async () => {
+      const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+      const error = new Error("broadcast failed");
+      const groupClientStub = { addConnection: sinon.stub().resolves(), sendToAll: sinon.stub().resolves() };
+      groupClientStub.sendToAll.withArgs(sinon.match({ eventName })).rejects(error);
+      redisClientStub.getSessionId.returns("sessionId");
+      redisClientStub.getSession.resolves({ sessionId: "sessionId", participants: "" } as Session);
+      redisClientStub.getLock.resolves();
+      redisClientStub.onJoin.resolves();
+      webPubSubServiceClientStub.group.returns(groupClientStub as unknown as WebPubSubGroup);
+      webPubSubServiceClientStub.connectionExists.resolves(true);
+      webPubSubServiceClientStub.sendToConnection.resolves();
+      const response = createUserEventResponse();
+
+      emWebPubEventHandlerOptions.handleUserEvent(createUserEventRequest(Actions.SESSION_JOIN, data), response);
+      await new Promise<void>(resolve => setImmediate(resolve));
+
+      expect(response.success.notCalled).to.be.true;
+      expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
+    });
+  }
 
   it("should retain existing participants when joining sessions", async () => {
     const session = { sessionId: "sessionId", presenterId: "presenterId", presenterName: "presenterName", participants: JSON.stringify({ existingConnectionId: "existingUser" }) } as Session;
