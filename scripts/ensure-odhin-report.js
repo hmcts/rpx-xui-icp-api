@@ -142,7 +142,7 @@ function listInterestingFiles(directory) {
         return;
       }
       if (
-        /(failure-data\.json|error-context\.md|trace\.zip|summary\.json|load-profile\.html|runner-failure\.txt|[^/]\.(png|jpe?g))$/i.test(
+        /(failure-data\.json|error-context\.md|trace\.zip|summary\.json|load-profile\.html|runner-failure\.txt|[^/]+\.(png|jpe?g))$/i.test(
           entry.name,
         )
       ) {
