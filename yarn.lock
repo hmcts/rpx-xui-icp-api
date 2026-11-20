@@ -708,7 +708,7 @@ __metadata:
     "@types/ws": "npm:^8.18.1"
     "@typescript-eslint/eslint-plugin": "npm:^8.71.1"
     "@typescript-eslint/parser": "npm:^8.71.1"
-    applicationinsights: "npm:^3.17.0"
+    applicationinsights: "npm:^3.17.1"
     axios: "npm:^1.21.1"
     chai: "npm:^4.3.10"
     config: "npm:^3.3.9"
@@ -2383,9 +2383,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"applicationinsights@npm:^3.17.0":
-  version: 3.17.0
-  resolution: "applicationinsights@npm:3.17.0"
+"applicationinsights@npm:^3.17.1":
+  version: 3.17.1
+  resolution: "applicationinsights@npm:3.17.1"
   dependencies:
     "@azure/core-auth": "npm:^1.9.0"
     "@azure/functions": "npm:^4.11.2"
@@ -2407,7 +2407,7 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^2.10.0"
     "@opentelemetry/sdk-trace-node": "npm:^2.10.0"
     "@opentelemetry/semantic-conventions": "npm:^1.43.0"
-  checksum: 10c0/3fb18955a0f8344a1251789daf0c31f41401d8e8797f14c2c3ef1655274a5373282d7c0004b119c1aca81c82d0b7cc04a9be51ae09010d5d79b8148e50515f78
+  checksum: 10c0/aa0c99e328fa17f1b49941e4c06c0ee51a690e74361511694a1ab8cf9038530869c6e226c05bceca06e73a879e0d0cc18fc9f43ddc8196adc59d29085b810344
   languageName: node
   linkType: hard
 

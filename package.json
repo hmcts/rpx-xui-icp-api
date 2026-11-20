@@ -29,7 +29,7 @@
     "@hmcts/nodejs-healthcheck": "^1.8.6",
     "@hmcts/nodejs-logging": "^4.0.0",
     "@hmcts/properties-volume": "^1.4.1",
-    "applicationinsights": "^3.17.0",
+    "applicationinsights": "^3.17.1",
     "axios": "^1.21.1",
     "config": "^3.3.9",
     "cookie-parser": "^1.4.4",
