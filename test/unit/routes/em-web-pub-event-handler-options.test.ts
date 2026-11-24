@@ -347,7 +347,34 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     expect(groupClientStub.addConnection.calledOnceWith("connectionId")).to.be.true;
     expect(redisClientStub.onJoin.calledOnceWith(session, { connectionId: "username" })).to.be.true;
+    expect(groupClientStub.sendToAll.args).to.deep.equal([
+      [{ eventName: Actions.PARTICIPANTS_UPDATED, data: { connectionId: "username" } }],
+      [{ eventName: Actions.NEW_PARTICIPANT_JOINED, data: null }],
+    ]);
   });
+
+  for (const eventName of [Actions.PARTICIPANTS_UPDATED, Actions.NEW_PARTICIPANT_JOINED]) {
+    it(`should report ${eventName} broadcast failures during session joins`, async () => {
+      const data = { caseId: "caseId", sessionId: "sessionId", username: "username", documentId: "documentId" };
+      const error = new Error("broadcast failed");
+      const groupClientStub = { addConnection: sinon.stub().resolves(), sendToAll: sinon.stub().resolves() };
+      groupClientStub.sendToAll.withArgs(sinon.match({ eventName })).rejects(error);
+      redisClientStub.getSessionId.returns("sessionId");
+      redisClientStub.getSession.resolves({ sessionId: "sessionId", participants: "" } as Session);
+      redisClientStub.getLock.resolves();
+      redisClientStub.onJoin.resolves();
+      webPubSubServiceClientStub.group.returns(groupClientStub as unknown as WebPubSubGroup);
+      webPubSubServiceClientStub.connectionExists.resolves(true);
+      webPubSubServiceClientStub.sendToConnection.resolves();
+      const response = createUserEventResponse();
+
+      emWebPubEventHandlerOptions.handleUserEvent(createUserEventRequest(Actions.SESSION_JOIN, data), response);
+      await new Promise<void>(resolve => setImmediate(resolve));
+
+      expect(response.success.notCalled).to.be.true;
+      expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
+    });
+  }
 
   it("should retain existing participants when joining sessions", async () => {
     const session = { sessionId: "sessionId", presenterId: "presenterId", presenterName: "presenterName", participants: JSON.stringify({ existingConnectionId: "existingUser" }) } as Session;
@@ -485,10 +512,23 @@ describe("EmWebPubEventHandlerOptions", () => {
 
     const updatePresenterStub = sinon.stub(emWebPubEventHandlerOptions, "onUpdatePresenter").resolves();
 
-    emWebPubEventHandlerOptions.checkIfConnectionIsPrenseterAndRemove(connectionId, session);
+    expect(emWebPubEventHandlerOptions.checkIfConnectionIsPrenseterAndRemove(connectionId, session)).to.be.undefined;
 
     expect(updatePresenterStub.calledOnce).to.be.true;
     expect(updatePresenterStub.calledWith({ caseId: "caseId", documentId: "documentId", presenterId: "", presenterName: "" })).to.be.true;
+    expect(session.presenterId).to.equal("");
+    expect(session.presenterName).to.equal("");
+  });
+
+  it("should report failed presenter updates after presenter removal returns void", async () => {
+    const session = { presenterId: "conn1", presenterName: "presenter", caseId: "caseId", documentId: "documentId" } as Session;
+    const error = new Error("presenter update failed");
+    sinon.stub(emWebPubEventHandlerOptions, "onUpdatePresenter").rejects(error);
+
+    expect(emWebPubEventHandlerOptions.checkIfConnectionIsPrenseterAndRemove("conn1", session)).to.be.undefined;
+    await new Promise<void>(resolve => setImmediate(resolve));
+
+    expect(appInsightsStub.trackException.calledOnceWith({ exception: error })).to.be.true;
   });
 
   it("should remove an existing participant", async () => {

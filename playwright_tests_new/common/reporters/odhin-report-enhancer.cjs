@@ -1,14 +1,14 @@
 /* global require, module */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { parse } = require('node-html-parser');
 
 const evidenceLinkAttributes = ' target="_blank" rel="noopener noreferrer"';
 
 function deriveFeatureName(filePath) {
   const normalized = String(filePath ?? '')
-    .replace(/\\/g, '/')
+    .replaceAll('\\', '/')
     .trim();
 
   if (!normalized) {
@@ -24,7 +24,7 @@ function deriveFeatureName(filePath) {
   ];
 
   for (const pattern of rootedPatterns) {
-    const match = normalized.match(pattern);
+    const match = pattern.exec(normalized);
     if (match?.[1]) {
       return match[1];
     }
@@ -53,14 +53,17 @@ function buildAccessibilityEvidenceBlock(entries) {
   const cards = normalizedEntries
     .map((entry) => {
       const screenshotPath = entry.screenshotFileName ? `./accessibility-evidence/${entry.screenshotFileName}` : '';
+      const htmlPath = `./accessibility-evidence/${entry.htmlFileName}`;
+      const reportPath = `./accessibility-evidence/${entry.reportFileName}`;
+      const jsonPath = `./accessibility-evidence/${entry.jsonFileName}`;
       const evidenceLinks = [
-        `<a href="${escapeAttribute(`./accessibility-evidence/${entry.htmlFileName}`)}"${evidenceLinkAttributes}>${entry.engine === 'summary' ? 'open page summary' : 'issue detail'}</a>`,
+        `<a href="${escapeAttribute(htmlPath)}"${evidenceLinkAttributes}>${entry.engine === 'summary' ? 'open page summary' : 'issue detail'}</a>`,
         entry.reportFileName
-          ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.reportFileName}`)}"${evidenceLinkAttributes}>native Lighthouse HTML</a>`
+          ? `<a href="${escapeAttribute(reportPath)}"${evidenceLinkAttributes}>native Lighthouse HTML</a>`
           : '',
         screenshotPath ? `<a href="${escapeAttribute(screenshotPath)}"${evidenceLinkAttributes}>screenshot</a>` : '',
         entry.jsonFileName
-          ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.jsonFileName}`)}"${evidenceLinkAttributes}>${jsonLinkLabel(entry.engine)}</a>`
+          ? `<a href="${escapeAttribute(jsonPath)}"${evidenceLinkAttributes}>${jsonLinkLabel(entry.engine)}</a>`
           : '',
       ]
         .filter(Boolean)
@@ -173,7 +176,7 @@ function buildTestEvidenceNavigation(navigation) {
 }
 
 function buildAccessibilityModalNavigationScript() {
-  return `
+  return String.raw`
     <script id="odhin-a11y-modal-nav-script">
       (function() {
         if (window.__odhinA11yModalNavigation) {
@@ -182,7 +185,7 @@ function buildAccessibilityModalNavigationScript() {
         window.__odhinA11yModalNavigation = true;
 
         function normalize(text) {
-          return String(text || '').replace(/\\s+/g, ' ').trim();
+          return String(text || '').replace(/\s+/g, ' ').trim();
         }
 
         function rowForTitle(title) {
@@ -268,14 +271,17 @@ function buildTestEvidencePanel(entries, navigation = {}) {
     .join('');
   const links = normalizedEntries
     .map((entry) => {
+      const screenshotPath = `./accessibility-evidence/${entry.screenshotFileName}`;
       const screenshotLink = entry.screenshotFileName
-        ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.screenshotFileName}`)}"${evidenceLinkAttributes}>Open screenshot</a>`
+        ? `<a href="${escapeAttribute(screenshotPath)}"${evidenceLinkAttributes}>Open screenshot</a>`
         : '';
+      const jsonPath = `./accessibility-evidence/${entry.jsonFileName}`;
       const jsonLink = entry.jsonFileName
-        ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.jsonFileName}`)}"${evidenceLinkAttributes}>Open ${escapeHtml(jsonLinkLabel(entry.engine))}</a>`
+        ? `<a href="${escapeAttribute(jsonPath)}"${evidenceLinkAttributes}>Open ${escapeHtml(jsonLinkLabel(entry.engine))}</a>`
         : '';
+      const reportPath = `./accessibility-evidence/${entry.reportFileName}`;
       const nativeReportLink = entry.reportFileName
-        ? `<a href="${escapeAttribute(`./accessibility-evidence/${entry.reportFileName}`)}"${evidenceLinkAttributes}>Open native Lighthouse HTML</a>`
+        ? `<a href="${escapeAttribute(reportPath)}"${evidenceLinkAttributes}>Open native Lighthouse HTML</a>`
         : '';
 
       return `
@@ -334,10 +340,10 @@ function buildIssueGroupsText(entries, globalRuleCounts) {
       const ruleText =
         rules.length > 0
           ? rules
-              .map(
-                (rule) =>
-                  `${rule}${globalRuleCounts.get(`${entry.engine}:${rule}`) ? ` (${globalRuleCounts.get(`${entry.engine}:${rule}`)})` : ''}`
-              )
+              .map((rule) => {
+                const count = globalRuleCounts.get(`${entry.engine}:${rule}`);
+                return count ? `${rule} (${count})` : rule;
+              })
               .join(', ')
           : entry.summary || 'no rule recorded';
       return `<div><strong>${escapeHtml(engineLabel(entry.engine))}:</strong> ${escapeHtml(ruleText)}</div>`;
@@ -684,20 +690,20 @@ function stripLegacyFileChartArtifacts(root) {
 
 function defaultTestListRowsPerPage(html) {
   return String(html)
-    .replace(
-      /\$\("#test-list-table"\)\.DataTable\(\{pageLength:100,lengthMenu:\[10,25,50,100\]\}\)/g,
+    .replaceAll(
+      '$("#test-list-table").DataTable({pageLength:100,lengthMenu:[10,25,50,100]})',
       '$("#test-list-table").DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})'
     )
-    .replace(
-      /\$\('#test-list-table'\)\.DataTable\(\{pageLength:100,lengthMenu:\[10,25,50,100\]\}\)/g,
+    .replaceAll(
+      "$('#test-list-table').DataTable({pageLength:100,lengthMenu:[10,25,50,100]})",
       "$('#test-list-table').DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})"
     )
-    .replace(
-      /\$\("#test-list-table"\)\.DataTable\(\{\}\)/g,
+    .replaceAll(
+      '$("#test-list-table").DataTable({})',
       '$("#test-list-table").DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})'
     )
-    .replace(
-      /\$\('#test-list-table'\)\.DataTable\(\{\}\)/g,
+    .replaceAll(
+      "$('#test-list-table').DataTable({})",
       "$('#test-list-table').DataTable({pageLength:100,lengthMenu:[10,25,50,100],stateSave:true,stateDuration:-1})"
     );
 }
@@ -848,12 +854,14 @@ function createEmptyFeatureStat(name) {
 }
 
 function normalizeFeatureStats(featureStats) {
-  const source =
-    featureStats instanceof Map
-      ? Array.from(featureStats.values())
-      : Array.isArray(featureStats)
-        ? featureStats
-        : Object.values(featureStats ?? {});
+  let source;
+  if (featureStats instanceof Map) {
+    source = Array.from(featureStats.values());
+  } else if (Array.isArray(featureStats)) {
+    source = featureStats;
+  } else {
+    source = Object.values(featureStats ?? {});
+  }
 
   return source
     .map((entry) => ({
@@ -879,7 +887,7 @@ function normalizeFeatureStats(featureStats) {
 function colorForFeature(name) {
   let hash = 0;
   for (const char of String(name)) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    hash = (hash * 31 + char[0].codePointAt(0)) >>> 0;
   }
   const hue = hash % 360;
   return `hsl(${hue} 68% 52%)`;
@@ -903,15 +911,15 @@ function formatDuration(durationMs) {
 
 function escapeHtml(value) {
   return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function escapeAttribute(value) {
-  return escapeHtml(value).replace(/`/g, '&#96;');
+  return escapeHtml(value).replaceAll('`', '&#96;');
 }
 
 function injectEnhancerStyles(root) {
@@ -1272,12 +1280,14 @@ function buildFeatureOverviewBlock(featureStats) {
   const totalTests = featureStats.reduce((sum, feature) => sum + feature.totalTests, 0);
   const topFeature = featureStats[0];
   const summaryLabel = featureStats.length > 1 ? 'Distribution' : 'Summary';
-  const layoutDensityClass =
-    featureStats.length <= 3
-      ? 'odhin-feature-overview-layout-compact'
-      : featureStats.length <= 6
-        ? 'odhin-feature-overview-layout-balanced'
-        : 'odhin-feature-overview-layout-dense';
+  let layoutDensityClass;
+  if (featureStats.length <= 3) {
+    layoutDensityClass = 'odhin-feature-overview-layout-compact';
+  } else if (featureStats.length <= 6) {
+    layoutDensityClass = 'odhin-feature-overview-layout-balanced';
+  } else {
+    layoutDensityClass = 'odhin-feature-overview-layout-dense';
+  }
   const tableViewportPx = Math.min(520, Math.max(156, 72 + featureStats.length * 40));
   const rows = featureStats
     .map((feature) => {
@@ -1409,7 +1419,7 @@ function inferEvidenceEngine(entry) {
 }
 
 function engineSortOrder(engine) {
-  return ['summary', 'axe', 'wave-like', 'screen-reader', 'lighthouse'].indexOf(engine) >= 0
+  return ['summary', 'axe', 'wave-like', 'screen-reader', 'lighthouse'].includes(engine)
     ? ['summary', 'axe', 'wave-like', 'screen-reader', 'lighthouse'].indexOf(engine)
     : 99;
 }

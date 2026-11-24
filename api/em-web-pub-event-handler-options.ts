@@ -155,8 +155,8 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     });
 
 
-    groupClient.sendToAll({ eventName: Actions.PARTICIPANTS_UPDATED, data: participants });
-    groupClient.sendToAll({ eventName: Actions.NEW_PARTICIPANT_JOINED, data: null });
+    await groupClient.sendToAll({ eventName: Actions.PARTICIPANTS_UPDATED, data: participants });
+    await groupClient.sendToAll({ eventName: Actions.NEW_PARTICIPANT_JOINED, data: null });
   }
 
   async checkIfConnectionExistAndRemove(participants: unknown) {
@@ -186,7 +186,7 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
   async onUpdateScreen(screen: { caseId: string, documentId: string, body: unknown }): Promise<void> {
     const sessionId = this.redisClient.getSessionId(screen.caseId, screen.documentId);
     const groupClient = this.client.group(sessionId);
-    groupClient.sendToAll({ eventName: Actions.SCREEN_UPDATED, data: screen.body });
+    await groupClient.sendToAll({ eventName: Actions.SCREEN_UPDATED, data: screen.body });
   }
 
   async onRemoveParticant(connectionId: string, caseId: string, documentId: string): Promise<void> {
@@ -221,7 +221,9 @@ export class EmWebPubEventHandlerOptions implements WebPubSubEventHandlerOptions
     if (connectionId === session.presenterId) {
       session.presenterId = "";
       session.presenterName = "";
-      this.onUpdatePresenter({ caseId: session.caseId, documentId: session.documentId, presenterId: "", presenterName: "" } as PresenterUpdate);
+      void this.onUpdatePresenter({ caseId: session.caseId, documentId: session.documentId, presenterId: "", presenterName: "" } as PresenterUpdate).catch(error => {
+        this.appInsightClient.trackException({ exception: error });
+      });
     }
   }
   

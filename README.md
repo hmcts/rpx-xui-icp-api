@@ -33,7 +33,7 @@ Start the local dependencies
 Log in to Azure and the required container registries:
 
     az login
-    az acr login --name hmctspublic
+    az acr login --name hmctsprod
     az acr login --name hmctsprivate
 
 Pull the dependency images:

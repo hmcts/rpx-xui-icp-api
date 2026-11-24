@@ -5,7 +5,7 @@ const odhinModule = require('odhin-reports-playwright');
 const { createEmptyFeatureStat, deriveFeatureName, enhanceGeneratedReport } = require('./odhin-report-enhancer.cjs');
 
 const OdhinReporter = odhinModule.default ?? odhinModule;
-const terminalStatusesNoRetry = ['passed', 'flaky', 'skipped', 'interrupted'];
+const terminalStatusesNoRetry = new Set(['passed', 'flaky', 'skipped', 'interrupted']);
 
 class OdhinAdaptiveReporter {
   constructor(options = {}) {
@@ -14,12 +14,11 @@ class OdhinAdaptiveReporter {
     this.outputFolder = reporterOptions.outputFolder;
     const configuredLightweight = reporterOptions.lightweight;
     const envLightweight = process.env.PW_ODHIN_LIGHTWEIGHT;
-    this.lightweight =
-      typeof configuredLightweight === 'boolean'
-        ? configuredLightweight
-        : envLightweight
-          ? envLightweight.toLowerCase() === 'true'
-          : !process.env.CI;
+    if (typeof configuredLightweight === 'boolean') {
+      this.lightweight = configuredLightweight;
+    } else {
+      this.lightweight = envLightweight ? envLightweight.toLowerCase() === 'true' : !process.env.CI;
+    }
 
     const normalizeTestOutputMode = (raw) => {
       if (raw === true || raw === false) {
@@ -39,12 +38,13 @@ class OdhinAdaptiveReporter {
 
     // Keep stdout/stderr only for failed tests in default mode.
     this.testOutputMode = normalizeTestOutputMode(reporterOptions.testOutput);
-    this.profileEnabled =
-      typeof reporterOptions.profile === 'boolean'
-        ? reporterOptions.profile
-        : process.env.PW_ODHIN_PROFILE
-          ? process.env.PW_ODHIN_PROFILE.toLowerCase() === 'true'
-          : true;
+    if (typeof reporterOptions.profile === 'boolean') {
+      this.profileEnabled = reporterOptions.profile;
+    } else {
+      this.profileEnabled = process.env.PW_ODHIN_PROFILE
+        ? process.env.PW_ODHIN_PROFILE.toLowerCase() === 'true'
+        : true;
+    }
     const configuredRuntimeHookTimeoutMs = reporterOptions.runtimeHookTimeoutMs ?? process.env.PW_ODHIN_RUNTIME_HOOK_TIMEOUT_MS;
     this.runtimeHookTimeoutMs = normalizeRuntimeHookTimeoutMs(configuredRuntimeHookTimeoutMs, 15000);
     const configuredFinalizationTimeoutMs = reporterOptions.finalizationTimeoutMs ?? process.env.PW_ODHIN_FINALIZATION_TIMEOUT_MS;
@@ -115,7 +115,7 @@ class OdhinAdaptiveReporter {
 
     this.recordStatus(result?.status);
     this.recordFeatureStat(test, result);
-    this.enqueueInnerCallback('onTestEnd', () => this.inner.onTestEnd(test, nextResult), { test });
+    void this.enqueueInnerCallback('onTestEnd', () => this.inner.onTestEnd(test, nextResult), { test });
   }
 
   async onEnd(result) {
@@ -152,13 +152,13 @@ class OdhinAdaptiveReporter {
 
   async onStdOut(chunk, test, result) {
     if (typeof this.inner.onStdOut === 'function') {
-      this.enqueueInnerCallback('onStdOut', () => this.inner.onStdOut(chunk, test, result), { test });
+      void this.enqueueInnerCallback('onStdOut', () => this.inner.onStdOut(chunk, test, result), { test });
     }
   }
 
   async onStdErr(chunk, test, result) {
     if (typeof this.inner.onStdErr === 'function') {
-      this.enqueueInnerCallback('onStdErr', () => this.inner.onStdErr(chunk, test, result), { test });
+      void this.enqueueInnerCallback('onStdErr', () => this.inner.onStdErr(chunk, test, result), { test });
     }
   }
 
@@ -281,7 +281,7 @@ const normalizeFinalStatus = (status, retry) => {
 };
 
 const isFinalResult = (status, retry, retries) =>
-  terminalStatusesNoRetry.includes(status) || Number(retry ?? 0) === Number(retries ?? 0);
+  terminalStatusesNoRetry.has(status) || Number(retry ?? 0) === Number(retries ?? 0);
 
 const withTimeout = async (promise, timeoutMs) => {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
@@ -316,8 +316,12 @@ const formatErrorMessage = (error) => {
 };
 
 const formatHookContext = ({ test } = {}) => {
-  const title =
-    typeof test?.titlePath === 'function' ? test.titlePath().join(' > ') : typeof test?.title === 'string' ? test.title : '';
+  let title = '';
+  if (typeof test?.titlePath === 'function') {
+    title = test.titlePath().join(' > ');
+  } else if (typeof test?.title === 'string') {
+    title = test.title;
+  }
   return title ? ` test="${title}"` : '';
 };
 
@@ -383,7 +387,12 @@ function addFailureSource(test, result) {
     return result;
   }
 
-  const errors = Array.isArray(result.errors) ? result.errors : result.error ? [result.error] : [];
+  let errors = [];
+  if (Array.isArray(result.errors)) {
+    errors = result.errors;
+  } else if (result.error) {
+    errors = [result.error];
+  }
   const errorText = errors.map((error) => `${error?.message ?? ''}\n${error?.stack ?? ''}`).join('\n');
   const source = deriveFailureSource(`${test?.title ?? ''}\n${errorText}`);
   if (!source || errors.some((error) => String(error?.stack ?? error?.message ?? '').startsWith('[Failure source:'))) {

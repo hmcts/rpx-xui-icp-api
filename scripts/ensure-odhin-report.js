@@ -151,16 +151,20 @@ function listInterestingFiles(directory) {
     });
   };
   visit(directory);
-  return found.sort().slice(0, 200);
+  found.sort((left, right) => {
+    if (left < right) return -1;
+    return left > right ? 1 : 0;
+  });
+  return found.slice(0, 200);
 }
 
 function escapeHtml(value) {
   return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 if (require.main === module) {
